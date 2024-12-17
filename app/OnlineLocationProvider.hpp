@@ -11,24 +11,22 @@
 class OnlineLocationProvider : public ILocationProvider
 {
 public:
-    OnlineLocationProvider(std::string hostName, std::string accessKey)
-    : mHostName{hostName}
-    , mAccessKey{accessKey}
-    {}
+    OnlineLocationProvider(std::string hostName, std::string accessKey);
 
     virtual ~OnlineLocationProvider() override = default;
 
-    virtual bool prepareProvider() override;
-    
     virtual void getByIp(IpAdress address);
 
 private:
     inline constexpr static int OK_STATUS_CODE = 200;
 
+    // TODO: Provide it in constructor to allow mocking (and create factory for OnlineLocationProvider)
     QNetworkAccessManager mNetworkAccessManager;
     
-    const std::string mHostName;
-    const std::string mAccessKey;
+    const QString mHostName;
+    const QString mAccessKey;
+
+    bool isReady() const;
 
     static QString getIpFromRequest(QNetworkRequest);
 };

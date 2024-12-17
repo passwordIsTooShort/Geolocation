@@ -11,6 +11,12 @@ public:
     {}
     virtual ~IpAdress() = default;
 
+    std::string getIpAddress() const
+    {
+        return mIpAddress;
+    }
+
+private:
     std::string mIpAddress;
 };
 #endif // APP_IPADDRESS_HPP_

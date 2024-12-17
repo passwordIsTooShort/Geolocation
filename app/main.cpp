@@ -21,7 +21,6 @@ int main(int argc, char **argv)
 
     const std::string hostName = "http://api.ipstack.com";
     std::unique_ptr<ILocationProvider> locationProvider = std::make_unique<OnlineLocationProvider>(hostName, accesKey);
-    std::cout << "Prepare provider result: " << locationProvider->prepareProvider() << '\n';
         
     auto callback = [](std::string ip, std::string apiKey, GeolocationData geolocation)
     {

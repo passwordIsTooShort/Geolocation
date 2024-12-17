@@ -6,14 +6,20 @@
 #include <QtNetwork/QNetworkRequest>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
+#include <QtCore/QStringBuilder>
+#include <QtCore/QRegularExpression>
 
-bool OnlineLocationProvider::prepareProvider()
+OnlineLocationProvider::OnlineLocationProvider(std::string hostName, std::string accessKey)
+: mHostName{QString::fromStdString(hostName)}
+, mAccessKey{QString::fromStdString(accessKey)}
 {
     QObject::connect(&mNetworkAccessManager, &QNetworkAccessManager::finished, [this](QNetworkReply* reply)
     {
+        qInfo() << "Ip from request: " << getIpFromRequest(reply->request()) << "\n";
+
         if (reply->error())
         {
-            std::cerr << "Received error response. Error: " << reply->errorString().toStdString() << "\n";
+            qWarning() << "Received error response. Error: " << reply->errorString() << "\n";
             // TODO: Use error callback (once it will be added to interface)
             return;
         }
@@ -21,50 +27,73 @@ bool OnlineLocationProvider::prepareProvider()
         const auto statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (statusCode != OK_STATUS_CODE)
         {
-            std::cerr << "Received not OK response while doing request for ip: " << getIpFromRequest(reply->request()).toStdString()
-                        << ". Status code: " << statusCode << ". Reason phase attribute: "
-                        << reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString().toStdString() << "\n";
+            qWarning() << "Received not OK response while doing request for ip: " << getIpFromRequest(reply->request())
+                        << ". Status code: " << statusCode << ". Reason phrase attribute: "
+                        << reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString() << "\n";
             // TODO: Use error callback (once it will be added to interface)
+            return;
         }
-        
 
         QString strReply = QString(reply->readAll());
-
         QJsonParseError jsonConversionError;
         QJsonDocument jsonResponse(QJsonDocument::fromJson(strReply.toUtf8(), &jsonConversionError));
         if (jsonConversionError.error != QJsonParseError::ParseError::NoError)
         {
-            std::cerr << "There is json parsing error while processing request for IP: " << getIpFromRequest(reply->request()).toStdString()
-                        << ". Error: " << jsonConversionError.errorString().toStdString() << "\n";
+            qWarning() << "There is json parsing error while processing request for IP: " << getIpFromRequest(reply->request())
+                        << ". Error: " << jsonConversionError.errorString() << "\n";
             // TODO: Use error callback (once it will be added to interface)
+            return;
         }
-        
 
+        if (!mOnNewGeolocationCallback)
+        {
+            qWarning() << "Response for IP: " << getIpFromRequest(reply->request()) << " received and processed correctly"
+                       << ", but callback to handle location is not provided. Dropping this request";
+            // TODO: Instead of drop - just add to the queue. As soon as callback will be ready,
+            // it can be called for all previous requests
+        }
         QJsonObject jsonObj = jsonResponse.object();
         mOnNewGeolocationCallback(jsonObj[QString("ip")].toString().toStdString(),
-                                    mAccessKey,
+                                    mAccessKey.toStdString(),
                                     GeolocationData(jsonObj[QString("latitude")].toDouble(),
                                                     jsonObj[QString("longitude")].toDouble())
                                     );
 	});
-
-    return true;
 }
 
 void OnlineLocationProvider::getByIp(IpAdress address)
 {
-    std::cout << "Requesting geolocation for: " << address.mIpAddress << "\n";
-    QString fullResuestUrl(QString::fromStdString(mHostName));
-    fullResuestUrl += "/";
-    fullResuestUrl += QString::fromStdString(address.mIpAddress);
-    fullResuestUrl += "?access_key=";
-    fullResuestUrl += QString::fromStdString(mAccessKey);
+    if (!isReady())
+    {
+        // TODO: Remove when queue functionality will be done. Stay for now, to not "waste" requests on API
+        qWarning() << "Request cannot be done - Location provider not ready for handling request\n";
+        return;
+    }
+
+    qDebug() << "Requesting geolocation for: " << QString::fromStdString(address.getIpAddress()) << "\n";
+    QString fullResuestUrl = mHostName
+                             %"/"
+                             % QString::fromStdString(address.getIpAddress())
+                             % "?access_key="
+                             % mAccessKey;
 
     mNetworkAccessManager.get(QNetworkRequest(fullResuestUrl));
 }
 
-QString OnlineLocationProvider::getIpFromRequest(QNetworkRequest)
+bool OnlineLocationProvider::isReady() const
 {
-    // TODO:
-    return "0.0.0.0";
+    return mOnNewGeolocationCallback != nullptr;
+}
+
+QString OnlineLocationProvider::getIpFromRequest(QNetworkRequest request)
+{
+    QRegularExpression ipFromRequestRegularExpression("^http.*\\/(\\d+\\.\\d+\\.\\d+\\.\\d+)\\?.*");
+    QRegularExpressionMatch ipMatch = ipFromRequestRegularExpression.match(request.url().toString());
+    if (!ipMatch.hasMatch())
+    {
+        qWarning() << "Cannot parse ip from request with url: " << request.url().toString() << "\n";
+        return "";
+    }
+
+    return ipMatch.captured(1);
 }
