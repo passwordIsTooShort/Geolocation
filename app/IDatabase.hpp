@@ -1,6 +1,8 @@
 #ifndef APP_IDATABASE_HPP_
 #define APP_IDATABASE_HPP_
 
+#include <optional>
+
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
 
@@ -12,12 +14,14 @@ public:
 
     virtual bool connectToDatabase() = 0;
 
+    virtual bool prepareToUse() = 0;
+
     virtual bool add(GeolocationData locationData, IpAdress address) = 0;
 
     virtual bool removeByIpAdress(IpAdress address) = 0;
     
     virtual bool removeByGeolocation(GeolocationData locationData) = 0;
     
-    virtual GeolocationData getLocation(IpAdress address) const = 0;
+    virtual std::optional<GeolocationData> getLocation(IpAdress address) const = 0;
 };
 #endif // APP_IDATABASE_HPP_

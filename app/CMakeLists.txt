@@ -13,10 +13,12 @@ set_target_properties(${PROJECT_NAME}
 find_package(Qt6 REQUIRED COMPONENTS Network)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Sql)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Sql)
 
 target_compile_options(${PROJECT_NAME}
     PUBLIC
@@ -28,5 +30,5 @@ target_compile_options(${PROJECT_NAME}
 target_sources(${PROJECT_NAME}
     PRIVATE
         OnlineLocationProvider.cpp
-        SqlDatabase.cpp
+        SQLiteDatabase.cpp
 )

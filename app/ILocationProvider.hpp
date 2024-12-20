@@ -7,7 +7,7 @@
 class ILocationProvider
 {
 public:
-    using GeolocationCallback = std::function<void(std::string ip, std::string apiKey, GeolocationData geolocation)>;
+    using GeolocationCallback = std::function<void(IpAdress ip, std::string apiKey, GeolocationData geolocation)>;
 
     ILocationProvider() = default;
 
@@ -15,7 +15,7 @@ public:
     
     virtual void getByIp(IpAdress address) = 0;
 
-    virtual void setNewGeolocationCallback(GeolocationCallback&& callback)
+    virtual void setOnNewGeolocationCallback(GeolocationCallback&& callback)
     {
         mOnNewGeolocationCallback = callback;
     }
