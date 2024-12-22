@@ -15,7 +15,7 @@ public:
 
     virtual ~OnlineLocationProvider() override = default;
 
-    virtual void getByIp(IpAdress address);
+    virtual void getByIp(IpAddress address);
 
 private:
     inline constexpr static int OK_STATUS_CODE = 200;

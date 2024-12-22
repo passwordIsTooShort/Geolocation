@@ -28,7 +28,7 @@ bool SQLiteDatabase::prepareToUse()
     return executeQuery(tableCreateQuery);
 }
 
-bool SQLiteDatabase::add(GeolocationData locationData, IpAdress address)
+bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address)
 {
     // TODO: use QLocale instead QString::number to control precision
     // QLocale::FloatingPointShortest(20)
@@ -50,7 +50,7 @@ bool SQLiteDatabase::add(GeolocationData locationData, IpAdress address)
     return executeQuery(addLocationQuery);
 }
 
-bool SQLiteDatabase::removeByIpAdress(IpAdress address)
+bool SQLiteDatabase::removeByIpAddress(IpAddress address)
 {
     QString removeLocationQuery = "DELETE FROM " %
                                   TABLE_NAME %
@@ -75,7 +75,7 @@ bool SQLiteDatabase::removeByGeolocation(GeolocationData locationData)
     return executeQuery(removeLocationQuery);
 }
 
-std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAdress address) const
+std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAddress address) const
 {
     QString selectIpQuery = "SELECT latitude, longitude FROM " %
                             TABLE_NAME %

@@ -3,17 +3,22 @@
 
 #include <string>
 
-class IpAdress
+class IpAddress
 {
 public:
-    IpAdress(std::string ipAddress)
+    IpAddress(std::string ipAddress)
     : mIpAddress(ipAddress)
     {}
-    virtual ~IpAdress() = default;
+    virtual ~IpAddress() = default;
 
     std::string getIpAddress() const
     {
         return mIpAddress;
+    }
+
+    bool operator<(const IpAddress& other) const
+    {
+        return this->mIpAddress < other.mIpAddress;
     }
 
 private:

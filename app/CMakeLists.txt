@@ -31,4 +31,6 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         OnlineLocationProvider.cpp
         SQLiteDatabase.cpp
+        IpFromUrlProvider.cpp
+        BasicLocationManager.cpp
 )

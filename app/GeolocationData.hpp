@@ -1,5 +1,5 @@
-#ifndef APP_GEOLOCATION_DATA_HPP_
-#define APP_GEOLOCATION_DATA_HPP_
+#ifndef APP_GEOLOCATIONDATA_HPP_
+#define APP_GEOLOCATIONDATA_HPP_
 
 class GeolocationData
 {

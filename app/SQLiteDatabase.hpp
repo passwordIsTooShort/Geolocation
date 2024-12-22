@@ -19,13 +19,13 @@ public:
 
     virtual bool prepareToUse() override;
 
-    virtual bool add(GeolocationData locationData, IpAdress address) override;
+    virtual bool add(GeolocationData locationData, IpAddress address) override;
 
-    virtual bool removeByIpAdress(IpAdress address) override;
+    virtual bool removeByIpAddress(IpAddress address) override;
     
     virtual bool removeByGeolocation(GeolocationData locationData) override;
     
-    virtual std::optional<GeolocationData> getLocation(IpAdress address) const override;
+    virtual std::optional<GeolocationData> getLocation(IpAddress address) const override;
 
 private:
     inline static const QString TABLE_NAME = "ip_locations";

@@ -61,7 +61,7 @@ OnlineLocationProvider::OnlineLocationProvider(std::string hostName, std::string
 	});
 }
 
-void OnlineLocationProvider::getByIp(IpAdress address)
+void OnlineLocationProvider::getByIp(IpAddress address)
 {
     if (!isReady())
     {
