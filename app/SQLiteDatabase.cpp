@@ -104,6 +104,11 @@ std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAddress address) co
         retrievedLongitude = sqlQuery.value(LONGITUDE_ID).toDouble();
     }
 
+    if (results == 0)
+    {
+        return std::nullopt;
+    }
+
     if (results > 1)
     {
         qWarning() << "There are more than 1 locations stored for ip: "

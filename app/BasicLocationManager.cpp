@@ -31,6 +31,7 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
         {
             mDatabase->add(geolocation, ip);
         }
+        mNewLocationCallback(ip, strippedApiKey, geolocation);
 
         auto finishedIpIter = mProcessingIps.find(ip);
         if (finishedIpIter != mProcessingIps.end())
@@ -49,12 +50,16 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
 void BasicLocationManager::addLocationOfIp(IpAddress ipAddress)
 {
     const auto ipLocationStatus = getIpLocationStatus(ipAddress);
-    if (ipLocationStatus == LocationStatus::READY_TO_READ ||
-        ipLocationStatus == LocationStatus::IN_PROGRESS)
+    if (ipLocationStatus == LocationStatus::READY_TO_READ)
     {
-        std::cout << "Ip address: " << ipAddress.getIpAddress() << " already exists in database"
-                  << "or is processing. To force update it, run: method updateLocationOfIp"
-                  << ". Skipping this request\n";
+        std::cout << "Ip address: " << ipAddress.getIpAddress() << " already exists in database."
+                  << " To force update it, run: method updateLocationOfIp.\n";
+        return;
+    }
+    else if(ipLocationStatus == LocationStatus::IN_PROGRESS)
+    {
+        std::cout << "Ip address: " << ipAddress.getIpAddress() << " is currently processing."
+                  << " Wait to finish this request.\n";
         return;
     }
 

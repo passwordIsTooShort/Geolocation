@@ -7,6 +7,7 @@
 #include "OnlineLocationProvider.hpp"
 #include "IpFromUrlProvider.hpp"
 #include "BasicLocationManager.hpp"
+#include "MainWindow.hpp"
 
 int main(int argc, char **argv)
 {
@@ -32,9 +33,9 @@ int main(int argc, char **argv)
                                                std::move(locationProvider),
                                                std::move(ipFromUrlProvider));
 
-    IpAddress testIp("134.201.250.155");
-    locationManager->addLocationOfIp(testIp);
-    locationManager->addLocationOfUrl("stackoverflow.com");
+    MainWindow mainWindow(std::move(locationManager));
+    mainWindow.setWindowTitle("Geolocation provider");
+    mainWindow.show();
 
     return application.exec();
 }

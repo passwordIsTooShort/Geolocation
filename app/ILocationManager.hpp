@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string>
+#include <functional>
 
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
@@ -10,6 +11,8 @@
 class ILocationManager
 {
 public:
+    using NewLocationCallback = std::function<void(IpAddress ip, std::string apiKeyHash, GeolocationData geolocation)>;
+
     enum class LocationStatus
     {
         READY_TO_READ,
@@ -38,6 +41,14 @@ public:
     virtual std::optional<GeolocationData> getLocationOfIp(IpAddress ipAddress) = 0;
 
     virtual std::optional<GeolocationData> getLocationOfUrl(std::string url) = 0;
+
+    virtual void setOnNewLocationCallback(NewLocationCallback&& newLocationCallback)
+    {
+        mNewLocationCallback = std::move(newLocationCallback);
+    }
+
+protected:
+    NewLocationCallback mNewLocationCallback;
 };
 
 #endif // APP_ILOCATIONMANAGER_HPP_
