@@ -11,7 +11,7 @@
 class ILocationManager
 {
 public:
-    using NewLocationCallback = std::function<void(IpAddress ip, std::string apiKeyHash, GeolocationData geolocation)>;
+    using NewLocationCallback = std::function<void(IpAddress ip, GeolocationData geolocation)>;
 
     enum class LocationStatus
     {

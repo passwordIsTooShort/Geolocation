@@ -15,7 +15,9 @@ public:
 
     virtual ~OnlineLocationProvider() override = default;
 
-    virtual void getByIp(IpAddress address);
+    virtual void getByIp(IpAddress address,
+                         SuccessCallback&& successCallback,
+                         FailureCallback&& failureCallback) override;
 
 private:
     inline constexpr static int OK_STATUS_CODE = 200;
@@ -26,8 +28,7 @@ private:
     const QString mHostName;
     const QString mAccessKey;
 
-    bool isReady() const;
-
-    static QString getIpFromRequest(QNetworkRequest);
+    std::optional<GeolocationData> parseGeolocationFromReply(QNetworkReply* reply, std::string& failureInfo);
+    bool checkNetworkReply(QNetworkReply* reply, std::string& failureInfo);
 };
 #endif // APP_ONLINELOCATIONPROVIDER_HPP_

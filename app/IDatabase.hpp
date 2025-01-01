@@ -18,6 +18,8 @@ public:
 
     virtual bool add(GeolocationData locationData, IpAddress address) = 0;
 
+    virtual bool add(GeolocationData locationData, IpAddress address, std::string url) = 0;
+
     virtual bool removeByIpAddress(IpAddress address) = 0;
     
     virtual bool removeByGeolocation(GeolocationData locationData) = 0;

@@ -11,40 +11,6 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
 {
     std::cout << "Connect to database result: " << mDatabase->connectToDatabase() << '\n';
     std::cout << "Table creation result: " << mDatabase->prepareToUse() << '\n';
-
-    auto onNewLocationCallback = [this](IpAddress ip, std::string apiKey, GeolocationData geolocation)
-    {
-        const std::size_t charsToBePrintedFrontAndBack = 6;
-        const std::size_t replaceStartPoint = charsToBePrintedFrontAndBack;
-        const std::size_t elementsToReplace = apiKey.size() - replaceStartPoint - charsToBePrintedFrontAndBack;
-        const auto strippedApiKey = apiKey.replace(replaceStartPoint, elementsToReplace, elementsToReplace, '*');
-
-        auto urlIter = mIpToUrlMap.find(ip);
-        if (urlIter != mIpToUrlMap.end())
-        {
-            auto url = *urlIter;
-            // TODO: Add option to store in db also URL (optional field)
-            //mDatabase->add(geolocation, ip, url);
-            mIpToUrlMap.erase(urlIter);
-        }
-        else
-        {
-            mDatabase->add(geolocation, ip);
-        }
-        mNewLocationCallback(ip, strippedApiKey, geolocation);
-
-        auto finishedIpIter = mProcessingIps.find(ip);
-        if (finishedIpIter != mProcessingIps.end())
-        {
-            mProcessingIps.erase(finishedIpIter);
-        }
-        else
-        {
-            std::cout << "Ip : " << ip.getIpAddress() << " was processed, but wasn't on requests list\n";
-        }   
-   };
-
-   mLocationProvider->setOnNewGeolocationCallback(std::move(onNewLocationCallback));
 }
 
 void BasicLocationManager::addLocationOfIp(IpAddress ipAddress)
@@ -52,13 +18,13 @@ void BasicLocationManager::addLocationOfIp(IpAddress ipAddress)
     const auto ipLocationStatus = getIpLocationStatus(ipAddress);
     if (ipLocationStatus == LocationStatus::READY_TO_READ)
     {
-        std::cout << "Ip address: " << ipAddress.getIpAddress() << " already exists in database."
+        std::cout << "Ip address: " << ipAddress.toString() << " already exists in database."
                   << " To force update it, run: method updateLocationOfIp.\n";
         return;
     }
     else if(ipLocationStatus == LocationStatus::IN_PROGRESS)
     {
-        std::cout << "Ip address: " << ipAddress.getIpAddress() << " is currently processing."
+        std::cout << "Ip address: " << ipAddress.toString() << " is currently processing."
                   << " Wait to finish this request.\n";
         return;
     }
@@ -84,11 +50,23 @@ void BasicLocationManager::addLocationOfUrl(std::string url)
 void BasicLocationManager::updateLocationOfIp(IpAddress ipAddress)
 {
     // TODO: Verify if correct IP address
-
     mProcessingIps.insert(ipAddress);
-    mLocationProvider->getByIp(ipAddress);
+
+    mLocationProvider->getByIp(ipAddress,
+        [this, ipAddress](auto geolocationData)
+        {
+            handleNewLocation(ipAddress, geolocationData);
+        },
+        [ipAddress](auto errorString)
+        {
+            std::cout << "Failed to update location of IP: "
+                      << ipAddress.toString()
+                      << ". Error: "
+                      << errorString;
+        }
+    );
 }
-    
+
 void BasicLocationManager::updateLocationOfUrl(std::string url)
 {
     // TODO: Verfy url
@@ -177,4 +155,30 @@ bool BasicLocationManager::isUrlInFailedList(std::string url) const
 {
     auto urlIter = mUrlsFailedToGetIp.find(url);
     return urlIter != mUrlsFailedToGetIp.end();
+}
+
+void BasicLocationManager::handleNewLocation(IpAddress ipAddress,
+                                             GeolocationData geolocationData)
+{
+    std::string url;
+
+    auto urlIter = mIpToUrlMap.find(ipAddress);
+    if (urlIter != mIpToUrlMap.end())
+    {
+        url = urlIter->second;
+        mIpToUrlMap.erase(urlIter);
+    }
+    mDatabase->add(geolocationData, ipAddress, url);
+
+    mNewLocationCallback(ipAddress, geolocationData);
+
+    auto finishedIpIter = mProcessingIps.find(ipAddress);
+    if (finishedIpIter != mProcessingIps.end())
+    {
+        mProcessingIps.erase(finishedIpIter);
+    }
+    else
+    {
+        std::cout << "Ip : " << ipAddress.toString() << " was processed, but wasn't on requests list\n";
+    }
 }

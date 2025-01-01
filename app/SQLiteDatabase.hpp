@@ -21,6 +21,8 @@ public:
 
     virtual bool add(GeolocationData locationData, IpAddress address) override;
 
+    virtual bool add(GeolocationData locationData, IpAddress address, std::string url) override;
+
     virtual bool removeByIpAddress(IpAddress address) override;
     
     virtual bool removeByGeolocation(GeolocationData locationData) override;

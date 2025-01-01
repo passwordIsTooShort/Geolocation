@@ -26,7 +26,7 @@ private slots:
 private:
     static constexpr int GRID_WIDTH = 3;
     static constexpr int RESULTS_TO_DISPLAY = 5;
-    static constexpr int LINES_PER_SINGLE_RESULT = 3;
+    static constexpr int LINES_PER_SINGLE_RESULT = 2;
     static constexpr int RESULT_LABELS_NUMBER = RESULTS_TO_DISPLAY * LINES_PER_SINGLE_RESULT;
 
     std::unique_ptr<ILocationManager> mLocationManager;
@@ -43,7 +43,7 @@ private:
     int addConfigurationToGridLayout(QGridLayout* layout, int level);
     int addStatusToGridLayout(QGridLayout* layout, int level);
 
-    void handleNewLocation(IpAddress ip, std::string apiKeyHash, GeolocationData geolocation);
+    void handleNewLocation(IpAddress ip, GeolocationData geolocation);
     void shiftResults();
 };
 #endif // APP_MAINWINDOW_HPP_

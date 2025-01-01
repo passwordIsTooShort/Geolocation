@@ -20,7 +20,7 @@ public:
     BasicLocationManager(std::unique_ptr<IDatabase> database,
                          std::unique_ptr<ILocationProvider> locationProvider,
                          std::unique_ptr<IIpFromUrlProvider> ipFromUrlProvider);
-    
+
     virtual ~BasicLocationManager() = default;
 
     virtual void addLocationOfIp(IpAddress ipAddress) override;
@@ -55,6 +55,10 @@ private:
     bool isIpInFailedList(IpAddress ip) const;
     void addFailedUrl(std::string url);
     bool isUrlInFailedList(std::string url) const;
+
+    void handleNewLocation(IpAddress ipAddress,
+                           GeolocationData geolocationData);
+    std::optional<std::string> getUrlForIp(IpAddress ipAddress) const;
 };
 
 #endif // APP_BASICLOCATIONMANAGER_HPP_

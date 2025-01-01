@@ -30,9 +30,9 @@ MainWindow::MainWindow(std::unique_ptr<ILocationManager> locationManager)
 
     setCentralWidget(mainWidget);
 
-    mLocationManager->setOnNewLocationCallback([this](auto ip, auto apiHash, auto geolocation)
+    mLocationManager->setOnNewLocationCallback([this](auto ip, auto geolocation)
     {
-        handleNewLocation(ip, apiHash, geolocation);
+        handleNewLocation(ip, geolocation);
     });
 }
 
@@ -131,7 +131,7 @@ void MainWindow::handleAddLocationButton()
         }
         else
         {
-            handleNewLocation(ipAddres, "", result.value());
+            handleNewLocation(ipAddres, result.value());
         }
     }
 
@@ -139,26 +139,21 @@ void MainWindow::handleAddLocationButton()
     qInfo() << "Only DB: " << mGetLocationOnlyDbCheckBox->isChecked();
 }
 
-void MainWindow::handleNewLocation(IpAddress ip, std::string apiKeyHash, GeolocationData geolocation)
+void MainWindow::handleNewLocation(IpAddress ip, GeolocationData geolocation)
 {
     shiftResults();
     auto locationIter = mLocationResults.begin();
 
     // Filling frist line:
-    (*locationIter)->setText("Ip: " + QString::fromStdString(ip.getIpAddress()));
+    (*locationIter)->setText("Ip: " + QString::fromStdString(ip.toString()));
 
-    // // Filling second line:
+    // Filling second line:
     ++locationIter;
     (*locationIter)->setText("Location (latitiude, longtidiude): (" +
                                   QString::number(geolocation.getLatitude()) +
                                   ", " +
                                   QString::number(geolocation.geLongitude()) +
                                   ")");
-
-    // // Filling 3'rd line:
-    ++locationIter;
-    (*locationIter)->setText("Request done from api:" +
-                                  QString::fromStdString(apiKeyHash));
 }
 
 void MainWindow::shiftResults()

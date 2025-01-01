@@ -11,7 +11,7 @@ public:
     {}
     virtual ~IpAddress() = default;
 
-    std::string getIpAddress() const
+    std::string toString() const
     {
         return mIpAddress;
     }

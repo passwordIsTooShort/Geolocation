@@ -12,6 +12,7 @@
 int main(int argc, char **argv)
 {
     QApplication application(argc, argv);
+
     if (argc < 3)
     {
         std::cerr << "Usage: " << argv[0] << " <api_key> <database_path>\n";

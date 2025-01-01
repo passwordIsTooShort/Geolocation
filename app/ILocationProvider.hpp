@@ -9,20 +9,15 @@
 class ILocationProvider
 {
 public:
-    using GeolocationCallback = std::function<void(IpAddress ip, std::string apiKey, GeolocationData geolocation)>;
+    using SuccessCallback = std::function<void(GeolocationData geolocation)>;
+    using FailureCallback = std::function<void(std::string error)>;
 
     ILocationProvider() = default;
 
     virtual ~ILocationProvider() = default;
     
-    virtual void getByIp(IpAddress address) = 0;
-
-    virtual void setOnNewGeolocationCallback(GeolocationCallback&& callback)
-    {
-        mOnNewGeolocationCallback = callback;
-    }
-
-protected:
-    GeolocationCallback mOnNewGeolocationCallback;
+    virtual void getByIp(IpAddress address,
+                         SuccessCallback&& successCallback,
+                         FailureCallback&& failureCallback) = 0;
 };
 #endif // APP_ILOCATIONPROVIDER_HPP_

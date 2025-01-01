@@ -30,6 +30,11 @@ bool SQLiteDatabase::prepareToUse()
 
 bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address)
 {
+    return add(locationData, address, "");
+}
+
+bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address, std::string url)
+{
     // TODO: use QLocale instead QString::number to control precision
     // QLocale::FloatingPointShortest(20)
 
@@ -44,7 +49,7 @@ bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address)
                                "', '" %
                                QString::number(locationData.geLongitude()) %
                                "', '" %
-                               QString::fromStdString(address.getIpAddress()) %
+                               QString::fromStdString(address.toString()) %
                                "')";
 
     return executeQuery(addLocationQuery);
@@ -56,7 +61,7 @@ bool SQLiteDatabase::removeByIpAddress(IpAddress address)
                                   TABLE_NAME %
                                   " WHERE" %
                                   " (ip = '" %
-                                  QString::fromStdString(address.getIpAddress()) %
+                                  QString::fromStdString(address.toString()) %
                                   "');";
     return executeQuery(removeLocationQuery);
 }
@@ -81,7 +86,7 @@ std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAddress address) co
                             TABLE_NAME %
                             " WHERE" %
                             " (ip = '" %
-                            QString::fromStdString(address.getIpAddress()) %
+                            QString::fromStdString(address.toString()) %
                             "');";
 
     QSqlQuery sqlQuery;
@@ -112,7 +117,7 @@ std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAddress address) co
     if (results > 1)
     {
         qWarning() << "There are more than 1 locations stored for ip: "
-                   << QString::fromStdString(address.getIpAddress())
+                   << QString::fromStdString(address.toString())
                    << ". Retrieved locations: " << results
                    << ". Returning last location from query.";
     }
