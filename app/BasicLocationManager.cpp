@@ -71,7 +71,7 @@ void BasicLocationManager::updateLocationOfUrl(std::string url)
 {
     // TODO: Verfy url
 
-    auto successCallback = [this](auto url, auto ipAddresses)
+    auto successCallback = [this, url](auto ipAddresses)
     {
         for (const auto& signleIp : ipAddresses)
         {
@@ -80,7 +80,7 @@ void BasicLocationManager::updateLocationOfUrl(std::string url)
         }
     };
 
-    auto failureCallback = [this](auto url, auto failureInfo)
+    auto failureCallback = [this, url](auto failureInfo)
     {
         addFailedUrl(url);
         std::cout << "Failed to get ip for url: " << url

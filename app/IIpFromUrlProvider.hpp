@@ -6,17 +6,18 @@
 #include <string>
 
 #include "IpAddress.hpp"
+#include "Url.hpp"
 
 class IIpFromUrlProvider
 {
 public:
-    using onSuccess = std::function<void(std::string url, std::vector<IpAddress>&& ip)>;
-    using onFailure = std::function<void(std::string url, std::string failureInfo)>;
+    using SuccessCallback = std::function<void(std::vector<IpAddress>&& ip)>;
+    using FailureCallback = std::function<void(std::string failureInfo)>;
 
     IIpFromUrlProvider() = default;
 
     virtual ~IIpFromUrlProvider() = default;
 
-    virtual void getIpForUrl(std::string url, onSuccess successCallback, onFailure failureCallback) = 0;
+    virtual void getIpForUrl(Url url, SuccessCallback successCallback, FailureCallback failureCallback) = 0;
 };
 #endif // APP_IIPFROMURLPROVIDER_HPP_

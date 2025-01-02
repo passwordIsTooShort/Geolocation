@@ -2,13 +2,13 @@
 
 #include <QtNetwork/QHostInfo>
 
-void IpFromUrlProvider::getIpForUrl(std::string url, onSuccess successCallback, onFailure failureCallback)
+void IpFromUrlProvider::getIpForUrl(Url url, SuccessCallback successCallback, FailureCallback failureCallback)
 {
-    QHostInfo::lookupHost(QString::fromStdString(url), [url, successCallback, failureCallback](const QHostInfo &host)
+    QHostInfo::lookupHost(QString::fromStdString(url.toString()), [successCallback, failureCallback](const QHostInfo &host)
     {
         if (host.error() != QHostInfo::NoError)
         {
-            failureCallback(url, host.errorString().toStdString());
+            failureCallback(host.errorString().toStdString());
             return;
         }
 
@@ -21,6 +21,6 @@ void IpFromUrlProvider::getIpForUrl(std::string url, onSuccess successCallback, 
             return elem.toString().toStdString();
         });
 
-        successCallback(url, std::move(result));
+        successCallback(std::move(result));
     });
 }

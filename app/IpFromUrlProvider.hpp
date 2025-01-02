@@ -13,6 +13,6 @@ public:
 
     virtual ~IpFromUrlProvider() = default;
 
-    virtual void getIpForUrl(std::string url, onSuccess successCallback, onFailure failureCallback) override;
+    virtual void getIpForUrl(Url url, SuccessCallback successCallback, FailureCallback failureCallback) override;
 };
 #endif // APP_IPFROMURLPROVIDER_HPP_
