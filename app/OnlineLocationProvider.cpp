@@ -63,7 +63,7 @@ std::optional<GeolocationData> OnlineLocationProvider::parseGeolocationFromReply
     }
 
     QJsonObject jsonObj = jsonResponse.object();
-    return GeolocationData(jsonObj[QString("latitude")].toDouble(), jsonObj[QString("longitude")].toDouble());
+    return GeolocationData{jsonObj[QString("latitude")].toDouble(), jsonObj[QString("longitude")].toDouble()};
 }
 
 bool OnlineLocationProvider::checkNetworkReply(QNetworkReply* reply, std::string& failureInfo)

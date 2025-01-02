@@ -2,9 +2,11 @@
 #define APP_IDATABASE_HPP_
 
 #include <optional>
+#include <vector>
 
-#include "GeolocationData.hpp"
 #include "IpAddress.hpp"
+#include "Url.hpp"
+#include "IpLocationData.hpp"
 
 class IDatabase
 {
@@ -16,14 +18,16 @@ public:
 
     virtual bool prepareToUse() = 0;
 
-    virtual bool add(GeolocationData locationData, IpAddress address) = 0;
+    virtual bool add(IpLocationData ipLocationData) = 0;
 
-    virtual bool add(GeolocationData locationData, IpAddress address, std::string url) = 0;
+    virtual bool remove(IpAddress address) = 0;
 
-    virtual bool removeByIpAddress(IpAddress address) = 0;
-    
-    virtual bool removeByGeolocation(GeolocationData locationData) = 0;
-    
-    virtual std::optional<GeolocationData> getLocation(IpAddress address) const = 0;
+    virtual bool remove(Url url) = 0;
+
+    virtual bool remove(GeolocationData locationData) = 0;
+
+    virtual std::optional<IpLocationData> getLocation(IpAddress address) const = 0;
+
+    virtual std::vector<IpLocationData> getLocation(Url url) const = 0;
 };
 #endif // APP_IDATABASE_HPP_

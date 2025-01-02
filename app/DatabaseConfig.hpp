@@ -11,9 +11,12 @@ public:
         SQL_LITE
     };
 
-    DatabaseConfig(DatabaseType databaseType, std::string databasePath)
+    DatabaseConfig(DatabaseType databaseType,
+                   std::string databasePath,
+                   std::string tableName)
     : mType(databaseType)
     , mPath(databasePath)
+    , mTableName(tableName)
     {}
 
     std::string getQtDatabaseType() const
@@ -32,9 +35,15 @@ public:
         return mPath;
     }
 
+    std::string getTableName() const
+    {
+        return mTableName;
+    }
+
 private:
     const DatabaseType mType;
     const std::string mPath;
+    const std::string mTableName;
 
 };
 #endif // APP_DATABASECONFIG_HPP_

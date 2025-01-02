@@ -8,8 +8,9 @@
 #include <set>
 
 #include "ILocationManager.hpp"
-#include "GeolocationData.hpp"
+#include "IpLocationData.hpp"
 #include "IpAddress.hpp"
+#include "Url.hpp"
 #include "IDatabase.hpp"
 #include "ILocationProvider.hpp"
 #include "IIpFromUrlProvider.hpp"
@@ -35,16 +36,16 @@ public:
 
     virtual LocationStatus getUrlLocationStatus(std::string url) override;
 
-    virtual std::optional<GeolocationData> getLocationOfIp(IpAddress ipAddress) override;
+    virtual std::optional<IpLocationData> getLocationOfIp(IpAddress ipAddress) override;
 
-    virtual std::optional<GeolocationData> getLocationOfUrl(std::string url) override;
+    virtual std::optional<IpLocationData> getLocationOfUrl(std::string url) override;
 
 private:
     std::unique_ptr<IDatabase> mDatabase;
     std::unique_ptr<ILocationProvider> mLocationProvider;
     std::unique_ptr<IIpFromUrlProvider> mIpFromUrlProvider;
 
-    std::map<IpAddress, std::string> mIpToUrlMap;
+    std::map<IpAddress, Url> mIpToUrlMap;
 
     std::set<IpAddress> mProcessingIps;
     std::set<IpAddress> mUrlsFailedToGetIp;

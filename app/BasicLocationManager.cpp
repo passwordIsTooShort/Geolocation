@@ -75,7 +75,7 @@ void BasicLocationManager::updateLocationOfUrl(std::string url)
     {
         for (const auto& signleIp : ipAddresses)
         {
-            mIpToUrlMap[signleIp] = url;
+            mIpToUrlMap.emplace(signleIp, Url(url));
             updateLocationOfIp(signleIp);
         }
     };
@@ -116,12 +116,12 @@ ILocationManager::LocationStatus BasicLocationManager::getUrlLocationStatus(std:
     return ILocationManager::LocationStatus::NOT_EXIST;
 }
 
-std::optional<GeolocationData> BasicLocationManager::getLocationOfIp(IpAddress ipAddress)
+std::optional<IpLocationData> BasicLocationManager::getLocationOfIp(IpAddress ipAddress)
 {
     return mDatabase->getLocation(ipAddress);
 }
 
-std::optional<GeolocationData> BasicLocationManager::getLocationOfUrl(std::string url)
+std::optional<IpLocationData> BasicLocationManager::getLocationOfUrl(std::string url)
 {
     (void) url;
     return std::nullopt;
@@ -160,15 +160,15 @@ bool BasicLocationManager::isUrlInFailedList(std::string url) const
 void BasicLocationManager::handleNewLocation(IpAddress ipAddress,
                                              GeolocationData geolocationData)
 {
-    std::string url;
+    IpLocationData newLocation = {geolocationData, ipAddress};
 
     auto urlIter = mIpToUrlMap.find(ipAddress);
     if (urlIter != mIpToUrlMap.end())
     {
-        url = urlIter->second;
+        newLocation.url = urlIter->second;
         mIpToUrlMap.erase(urlIter);
     }
-    mDatabase->add(geolocationData, ipAddress, url);
+    mDatabase->add(newLocation);
 
     mNewLocationCallback(ipAddress, geolocationData);
 

@@ -30,9 +30,9 @@ MainWindow::MainWindow(std::unique_ptr<ILocationManager> locationManager)
 
     setCentralWidget(mainWidget);
 
-    mLocationManager->setOnNewLocationCallback([this](auto ip, auto geolocation)
+    mLocationManager->setOnNewLocationCallback([this](auto ipAddress, auto geolocationData)
     {
-        handleNewLocation(ip, geolocation);
+        handleNewLocation(IpLocationData{geolocationData, ipAddress, Url("")});
     });
 }
 
@@ -131,7 +131,7 @@ void MainWindow::handleAddLocationButton()
         }
         else
         {
-            handleNewLocation(ipAddres, result.value());
+            handleNewLocation(result.value());
         }
     }
 
@@ -139,20 +139,25 @@ void MainWindow::handleAddLocationButton()
     qInfo() << "Only DB: " << mGetLocationOnlyDbCheckBox->isChecked();
 }
 
-void MainWindow::handleNewLocation(IpAddress ip, GeolocationData geolocation)
+void MainWindow::handleNewLocation(IpLocationData ipLocationData)
 {
     shiftResults();
     auto locationIter = mLocationResults.begin();
 
     // Filling frist line:
-    (*locationIter)->setText("Ip: " + QString::fromStdString(ip.toString()));
+    QString textToFirstLine = "Ip: " + QString::fromStdString(ipLocationData.ipAddress.toString());
+    if (!ipLocationData.url.isEmpty())
+    {
+        textToFirstLine += ", url: " + QString::fromStdString(ipLocationData.url.toString());
+    }
+    (*locationIter)->setText(textToFirstLine);
 
     // Filling second line:
     ++locationIter;
     (*locationIter)->setText("Location (latitiude, longtidiude): (" +
-                                  QString::number(geolocation.getLatitude()) +
+                                  QString::number(ipLocationData.geolocationdata.latitude) +
                                   ", " +
-                                  QString::number(geolocation.geLongitude()) +
+                                  QString::number(ipLocationData.geolocationdata.longitude) +
                                   ")");
 }
 
@@ -165,6 +170,4 @@ void MainWindow::shiftResults()
         (*iter)->setText(std::move(textToCopy));
         ++iter;
     }
-
-
 }

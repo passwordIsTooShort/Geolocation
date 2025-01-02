@@ -1,5 +1,6 @@
 #include "SQLiteDatabase.hpp"
 
+#include <memory>
 #include <QtSql/QSqlDatabase>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QLocale>
@@ -19,46 +20,43 @@ bool SQLiteDatabase::connectToDatabase()
 bool SQLiteDatabase::prepareToUse()
 {
     QString tableCreateQuery = "CREATE TABLE IF NOT EXISTS " %
-                               TABLE_NAME %
+                               QString::fromStdString(mDatabaseConfig.getTableName()) %
                                " (latitude double not null," %
                                " longitude double not null," %
-                               " ip text," %
-                               " api_hash text);";
+                               " ip text UNIQUE," %
+                               " url text);";
 
     return executeQuery(tableCreateQuery);
 }
 
-bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address)
+bool SQLiteDatabase::add(IpLocationData ipLocationData)
 {
-    return add(locationData, address, "");
-}
-
-bool SQLiteDatabase::add(GeolocationData locationData, IpAddress address, std::string url)
-{
-    // TODO: use QLocale instead QString::number to control precision
-    // QLocale::FloatingPointShortest(20)
-
     QString addLocationQuery = "INSERT INTO " %
-                               TABLE_NAME %
+                               QString::fromStdString(mDatabaseConfig.getTableName()) %
                                " (latitude," %
                                " longitude," %
-                               " ip)" %
+                               " ip," %
+                               " url)" %
                                " VALUES" %
                                " ('" %
-                               QString::number(locationData.getLatitude()) %
+                               QString::number(ipLocationData.geolocationdata.latitude,
+                                               'f', DECIMAL_DEGREES_SAVE_PRECISION) %
                                "', '" %
-                               QString::number(locationData.geLongitude()) %
+                               QString::number(ipLocationData.geolocationdata.longitude,
+                                               'f', DECIMAL_DEGREES_SAVE_PRECISION) %
                                "', '" %
-                               QString::fromStdString(address.toString()) %
+                               QString::fromStdString(ipLocationData.ipAddress.toString()) %
+                               "', '" %
+                               QString::fromStdString(ipLocationData.url.toString()) %
                                "')";
 
     return executeQuery(addLocationQuery);
 }
 
-bool SQLiteDatabase::removeByIpAddress(IpAddress address)
+bool SQLiteDatabase::remove(IpAddress address)
 {
     QString removeLocationQuery = "DELETE FROM " %
-                                  TABLE_NAME %
+                                  QString::fromStdString(mDatabaseConfig.getTableName()) %
                                   " WHERE" %
                                   " (ip = '" %
                                   QString::fromStdString(address.toString()) %
@@ -66,63 +64,94 @@ bool SQLiteDatabase::removeByIpAddress(IpAddress address)
     return executeQuery(removeLocationQuery);
 }
 
-bool SQLiteDatabase::removeByGeolocation(GeolocationData locationData)
+bool SQLiteDatabase::remove(Url url)
 {
     QString removeLocationQuery = "DELETE FROM " %
-                                  TABLE_NAME %
+                                  QString::fromStdString(mDatabaseConfig.getTableName()) %
                                   " WHERE" %
-                                  " (latitude = '" %
-                                  QString::number(locationData.getLatitude()) %
-                                  "' AND" %
-                                  " longitude = '" %
-                                  QString::number(locationData.geLongitude()) %
+                                  " (url = '" %
+                                  QString::fromStdString(url.toString()) %
                                   "');";
     return executeQuery(removeLocationQuery);
 }
 
-std::optional<GeolocationData> SQLiteDatabase::getLocation(IpAddress address) const
+bool SQLiteDatabase::remove(GeolocationData locationData)
 {
-    QString selectIpQuery = "SELECT latitude, longitude FROM " %
-                            TABLE_NAME %
+    QString removeLocationQuery = "DELETE FROM " %
+                                  QString::fromStdString(mDatabaseConfig.getTableName()) %
+                                  " WHERE" %
+                                  " (latitude = '" %
+                                  QString::number(locationData.latitude,
+                                                  'f', DECIMAL_DEGREES_SAVE_PRECISION) %
+                                  "' AND" %
+                                  " longitude = '" %
+                                  QString::number(locationData.longitude,
+                                                  'f', DECIMAL_DEGREES_SAVE_PRECISION) %
+                                  "');";
+    return executeQuery(removeLocationQuery);
+}
+
+std::optional<IpLocationData> SQLiteDatabase::getLocation(IpAddress address) const
+{
+    QString selectIpQuery = "SELECT latitude, longitude, ip, url FROM " %
+                            QString::fromStdString(mDatabaseConfig.getTableName()) %
                             " WHERE" %
                             " (ip = '" %
                             QString::fromStdString(address.toString()) %
                             "');";
-
-    QSqlQuery sqlQuery;
-    const auto queryResult = executeQuery(selectIpQuery, sqlQuery);
-    if (!queryResult)
-    {
-        qWarning() << "Failed to select geolocation from database - sql error";
-        return std::nullopt;
-    }
-
-    int results = 0;    
-    constexpr int LATITUDE_ID = 0;
-    constexpr int LONGITUDE_ID = 1;
-    double retrievedLatitude = -1;
-    double retrievedLongitude = -1;
-    while(sqlQuery.next())
-    {
-        ++results;
-        retrievedLatitude = sqlQuery.value(LATITUDE_ID).toDouble();
-        retrievedLongitude = sqlQuery.value(LONGITUDE_ID).toDouble();
-    }
-
-    if (results == 0)
+    const auto results = getTableEntries(selectIpQuery);
+    if (results.empty())
     {
         return std::nullopt;
     }
-
-    if (results > 1)
+    if (results.size() > 1)
     {
         qWarning() << "There are more than 1 locations stored for ip: "
                    << QString::fromStdString(address.toString())
-                   << ". Retrieved locations: " << results
+                   << ". Number of retrieved locations: " << results.size()
                    << ". Returning last location from query.";
     }
+    return std::optional<IpLocationData>(results.back());
+}
 
-    return std::optional<GeolocationData>(GeolocationData(retrievedLatitude, retrievedLongitude));
+std::vector<IpLocationData> SQLiteDatabase::getLocation(Url url) const
+{
+    QString selectIpQuery = "SELECT latitude, longitude, ip, url FROM " %
+                            QString::fromStdString(mDatabaseConfig.getTableName()) %
+                            " WHERE" %
+                            " (url = '" %
+                            QString::fromStdString(url.toString()) %
+                            "');";
+    return getTableEntries(selectIpQuery);
+}
+
+std::vector<IpLocationData> SQLiteDatabase::getTableEntries(QString queryString) const
+{
+    QSqlQuery sqlQuery;
+    const auto queryResult = executeQuery(queryString, sqlQuery);
+    if (!queryResult)
+    {
+        qWarning() << "Failed to select geolocation from database - sql error";
+        return {};
+    }
+
+    constexpr int LATITUDE_ID = 0;
+    constexpr int LONGITUDE_ID = 1;
+    constexpr int IP_ID = 2;
+    constexpr int URL_ID = 3;
+
+    std::vector<IpLocationData> databaseResults;
+    while(sqlQuery.next())
+    {
+        double latitiude = sqlQuery.value(LATITUDE_ID).toDouble();
+        double longtitiude = sqlQuery.value(LONGITUDE_ID).toDouble();
+        IpAddress ip(sqlQuery.value(IP_ID).toString().toStdString());
+        Url url(sqlQuery.value(URL_ID).toString().toStdString());
+
+        databaseResults.emplace_back(IpLocationData{latitiude, longtitiude, ip, url});
+    }
+
+    return databaseResults;
 }
 
 bool SQLiteDatabase::executeQuery(QString query) const

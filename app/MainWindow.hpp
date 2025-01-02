@@ -4,6 +4,7 @@
 #include <QtWidgets/QMainWindow>
 
 #include "ILocationManager.hpp"
+#include "IpLocationData.hpp"
 
 class ILocationManager;
 class QPushButton;
@@ -43,7 +44,7 @@ private:
     int addConfigurationToGridLayout(QGridLayout* layout, int level);
     int addStatusToGridLayout(QGridLayout* layout, int level);
 
-    void handleNewLocation(IpAddress ip, GeolocationData geolocation);
+    void handleNewLocation(IpLocationData ipLocationData);
     void shiftResults();
 };
 #endif // APP_MAINWINDOW_HPP_

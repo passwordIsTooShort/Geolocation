@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 
+#include "IpLocationData.hpp"
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
 
@@ -23,7 +24,7 @@ public:
     };
 
     ILocationManager() = default;
-    
+
     virtual ~ILocationManager() = default;
 
     virtual void addLocationOfIp(IpAddress ipAddress) = 0;
@@ -38,9 +39,9 @@ public:
 
     virtual LocationStatus getUrlLocationStatus(std::string url) = 0;
 
-    virtual std::optional<GeolocationData> getLocationOfIp(IpAddress ipAddress) = 0;
+    virtual std::optional<IpLocationData> getLocationOfIp(IpAddress ipAddress) = 0;
 
-    virtual std::optional<GeolocationData> getLocationOfUrl(std::string url) = 0;
+    virtual std::optional<IpLocationData> getLocationOfUrl(std::string url) = 0;
 
     virtual void setOnNewLocationCallback(NewLocationCallback&& newLocationCallback)
     {

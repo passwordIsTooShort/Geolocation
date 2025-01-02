@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     const std::string accesKey = argv[1];
     const std::string databasePath = argv[2];
 
-    DatabaseConfig databaseConfiguration(DatabaseConfig::DatabaseType::SQL_LITE, databasePath);
+    DatabaseConfig databaseConfiguration(DatabaseConfig::DatabaseType::SQL_LITE, databasePath, "ip_locations");
     std::unique_ptr<IDatabase> database = std::make_unique<SQLiteDatabase>(databaseConfiguration);
 
     const std::string hostName = "http://api.ipstack.com";
