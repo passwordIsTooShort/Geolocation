@@ -1,4 +1,5 @@
 #include <iostream>
+#include <variant>
 
 #include "BasicLocationManager.hpp"
 
@@ -13,95 +14,70 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
     std::cout << "Table creation result: " << mDatabase->prepareToUse() << '\n';
 }
 
-void BasicLocationManager::addLocationOfIp(IpAddress ipAddress)
+void BasicLocationManager::addLocation(IpAddress ipAddress)
 {
-    const auto ipLocationStatus = getIpLocationStatus(ipAddress);
-    if (ipLocationStatus == LocationStatus::READY_TO_READ)
-    {
-        std::cout << "Ip address: " << ipAddress.toString() << " already exists in database."
-                  << " To force update it, run: method updateLocationOfIp.\n";
-        return;
-    }
-    else if(ipLocationStatus == LocationStatus::IN_PROGRESS)
-    {
-        std::cout << "Ip address: " << ipAddress.toString() << " is currently processing."
-                  << " Wait to finish this request.\n";
-        return;
-    }
-
-    updateLocationOfIp(ipAddress);
+    insideAddLocation(ipAddress);
 }
 
-void BasicLocationManager::addLocationOfUrl(std::string url)
+void BasicLocationManager::addLocation(Url url)
 {
-    const auto urlLocationStatus = getUrlLocationStatus(url);
-    if (urlLocationStatus == LocationStatus::READY_TO_READ ||
-        urlLocationStatus == LocationStatus::IN_PROGRESS)
-    {
-        std::cout << "Url: " << url << " already exists in database"
-                  << "or is processing. To force update it, run: method updateLocationOfUrl"
-                  << ". Skipping this request\n";
-        return;
-    }
-
-    updateLocationOfUrl(url);
+    insideAddLocation(url);
 }
 
-void BasicLocationManager::updateLocationOfIp(IpAddress ipAddress)
+void BasicLocationManager::updateLocation(IpAddress ipAddress)
 {
     // TODO: Verify if correct IP address
-    mProcessingIps.insert(ipAddress);
+    startProcessing(ipAddress);
+    auto successCallback = [this, ipAddress](auto geolocationData)
+    {
+        handleNewLocation(ipAddress, geolocationData);
+    };
+    auto failureCallback = [this, ipAddress](auto errorString)
+    {
+        finishedWithFail(ipAddress);
+        std::cout << "Failed to update location of IP: "
+                    << ipAddress.toString()
+                    << ". Error: "
+                    << errorString;
+    };
 
-    mLocationProvider->getByIp(ipAddress,
-        [this, ipAddress](auto geolocationData)
-        {
-            handleNewLocation(ipAddress, geolocationData);
-        },
-        [ipAddress](auto errorString)
-        {
-            std::cout << "Failed to update location of IP: "
-                      << ipAddress.toString()
-                      << ". Error: "
-                      << errorString;
-        }
-    );
+    mLocationProvider->getByIp(ipAddress, successCallback, failureCallback);
 }
 
-void BasicLocationManager::updateLocationOfUrl(std::string url)
+void BasicLocationManager::updateLocation(Url url)
 {
     // TODO: Verfy url
-
+    startProcessing(url);
     auto successCallback = [this, url](auto ipAddresses)
     {
         for (const auto& signleIp : ipAddresses)
         {
-            mIpToUrlMap.emplace(signleIp, Url(url));
-            updateLocationOfIp(signleIp);
+            mIpToUrlMap.emplace(signleIp, url);
+            updateLocation(signleIp);
         }
     };
-
     auto failureCallback = [this, url](auto failureInfo)
     {
-        addFailedUrl(url);
-        std::cout << "Failed to get ip for url: " << url
+        finishedWithFail(url);
+        std::cout << "Failed to get ip for url: " << url.toString()
                   << ". Reason: " << failureInfo << '\n';
     };
 
     mIpFromUrlProvider->getIpForUrl(url, successCallback, failureCallback);
 }
 
-ILocationManager::LocationStatus BasicLocationManager::getIpLocationStatus(IpAddress ipAddress)
+ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(IpAddress ipAddress)
 {
     auto result = ILocationManager::LocationStatus::NOT_EXIST;
-    if (isIpInProcesingList(ipAddress))
+    if (isInProcesingList(ipAddress))
     {
         result = ILocationManager::LocationStatus::IN_PROGRESS;
     }
-    else if (isIpInFailedList(ipAddress))
+    else if (isMarkedAsFailed(ipAddress))
     {
         result = ILocationManager::LocationStatus::FAILED_TO_GET_LOCATION;
     }
-    else if(mDatabase->getLocation(ipAddress))
+    else if(mDatabase->getLocations(ipAddress).size() > 0)
     {
         result = ILocationManager::LocationStatus::READY_TO_READ;
     }
@@ -109,52 +85,61 @@ ILocationManager::LocationStatus BasicLocationManager::getIpLocationStatus(IpAdd
     return result;
 }
 
-ILocationManager::LocationStatus BasicLocationManager::getUrlLocationStatus(std::string url)
+ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(Url url)
 {
-    // TODO:
-    (void) url;
-    return ILocationManager::LocationStatus::NOT_EXIST;
+    auto result = ILocationManager::LocationStatus::NOT_EXIST;
+    if (isInProcesingList(url))
+    {
+        result = ILocationManager::LocationStatus::IN_PROGRESS;
+    }
+    else if (isMarkedAsFailed(url))
+    {
+        result = ILocationManager::LocationStatus::FAILED_TO_GET_IP;
+    }
+    else if(mDatabase->getLocations(url).size() > 0)
+    {
+        result = ILocationManager::LocationStatus::READY_TO_READ;
+    }
+
+    return result;
 }
 
-std::optional<IpLocationData> BasicLocationManager::getLocationOfIp(IpAddress ipAddress)
+std::vector<IpLocationData> BasicLocationManager::getLocations(IpAddress ipAddress)
 {
-    return mDatabase->getLocation(ipAddress);
+    return mDatabase->getLocations(ipAddress);
 }
 
-std::optional<IpLocationData> BasicLocationManager::getLocationOfUrl(std::string url)
+std::vector<IpLocationData> BasicLocationManager::getLocations(Url url)
 {
-    (void) url;
-    return std::nullopt;
+    return mDatabase->getLocations(url);
 }
 
-bool BasicLocationManager::isIpInProcesingList(IpAddress ip) const
+void BasicLocationManager::startProcessing(std::variant<IpAddress, Url> ipOrUrl)
 {
-    auto ipIter = mProcessingIps.find(ip);
-    return ipIter != mProcessingIps.end();
+    mProcessingElements.insert(ipOrUrl);
 }
 
-void BasicLocationManager::addFailedIp(IpAddress ip)
+void BasicLocationManager::finishedSuccesfully(std::variant<IpAddress, Url> ipOrUrl)
 {
-    // Add some max size, and if too many fails, just drop oldest one
-    mIpsFailedToGetLocation.insert(ip);
+    mProcessingElements.erase(ipOrUrl);
 }
 
-bool BasicLocationManager::isIpInFailedList(IpAddress ip) const
+void BasicLocationManager::finishedWithFail(std::variant<IpAddress, Url> ipOrUrl)
 {
-    auto ipIter = mIpsFailedToGetLocation.find(ip);
-    return ipIter != mIpsFailedToGetLocation.end();
+    mProcessingElements.erase(ipOrUrl);
+    mFailedElements.insert(ipOrUrl);
 }
 
-void BasicLocationManager::addFailedUrl(std::string url)
+bool BasicLocationManager::isInProcesingList(std::variant<IpAddress, Url> ipOrUrl) const
 {
-    // Add some max size, and if too many fails, just drop oldest one
-    mUrlsFailedToGetIp.insert(url);
+    const auto elementIter = mProcessingElements.find(ipOrUrl);
+    return elementIter != mProcessingElements.end();
 }
 
-bool BasicLocationManager::isUrlInFailedList(std::string url) const
+bool BasicLocationManager::isMarkedAsFailed(std::variant<IpAddress, Url> ipOrUrl) const
 {
-    auto urlIter = mUrlsFailedToGetIp.find(url);
-    return urlIter != mUrlsFailedToGetIp.end();
+    const auto elementIter = mFailedElements.find(ipOrUrl);
+    return elementIter != mFailedElements.end();
 }
 
 void BasicLocationManager::handleNewLocation(IpAddress ipAddress,
@@ -169,16 +154,11 @@ void BasicLocationManager::handleNewLocation(IpAddress ipAddress,
         mIpToUrlMap.erase(urlIter);
     }
     mDatabase->add(newLocation);
+    mNewLocationCallback(newLocation);
 
-    mNewLocationCallback(ipAddress, geolocationData);
-
-    auto finishedIpIter = mProcessingIps.find(ipAddress);
-    if (finishedIpIter != mProcessingIps.end())
+    finishedSuccesfully(ipAddress);
+    if (!newLocation.url.isEmpty())
     {
-        mProcessingIps.erase(finishedIpIter);
-    }
-    else
-    {
-        std::cout << "Ip : " << ipAddress.toString() << " was processed, but wasn't on requests list\n";
+        finishedSuccesfully(newLocation.url);
     }
 }

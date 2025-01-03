@@ -2,6 +2,7 @@
 #define APP_MAINWINDOW_HPP_
 
 #include <QtWidgets/QMainWindow>
+#include <QtCore/QStringBuilder>
 
 #include "ILocationManager.hpp"
 #include "IpLocationData.hpp"
@@ -30,6 +31,12 @@ private:
     static constexpr int LINES_PER_SINGLE_RESULT = 2;
     static constexpr int RESULT_LABELS_NUMBER = RESULTS_TO_DISPLAY * LINES_PER_SINGLE_RESULT;
 
+    struct LocationAddConfig
+    {
+        bool forceUpdate;
+        bool searchOnlyDb;
+    };
+
     std::unique_ptr<ILocationManager> mLocationManager;
 
     QLineEdit* mGetLocationLineEdit;
@@ -44,7 +51,41 @@ private:
     int addConfigurationToGridLayout(QGridLayout* layout, int level);
     int addStatusToGridLayout(QGridLayout* layout, int level);
 
+    void printNewLocationError(QString firstLineError, QString secondLineError);
     void handleNewLocation(IpLocationData ipLocationData);
     void shiftResults();
+
+    template <typename T>
+    void handleGetLocation(T ipOrUrl, LocationAddConfig config)
+    {
+        if (config.forceUpdate)
+        {
+            mLocationManager->updateLocation(ipOrUrl);
+            return;
+        }
+
+        const auto resultsList = mLocationManager->getLocations(ipOrUrl);
+        if (resultsList.empty())
+        {
+            if (config.searchOnlyDb)
+            {
+                QString firstLineError = "Failed to get location for: " %
+                                      QString::fromStdString(ipOrUrl.toString());
+                QString secondLineError = "Location not available in DB, and \"only DB\" is checked in configuration";
+                printNewLocationError(firstLineError, secondLineError);
+            }
+            else
+            {
+                mLocationManager->addLocation(ipOrUrl);
+            }
+        }
+        else
+        {
+            for (auto&& singleLocatin : resultsList)
+            {
+                handleNewLocation(singleLocatin);
+            }
+        }
+    }
 };
 #endif // APP_MAINWINDOW_HPP_

@@ -2,6 +2,7 @@
 #define APP_IPADDRESS_HPP_
 
 #include <string>
+#include <arpa/inet.h>
 
 class IpAddress
 {
@@ -19,6 +20,12 @@ public:
     bool operator<(const IpAddress& other) const
     {
         return this->mIpAddress < other.mIpAddress;
+    }
+
+    static bool isIpAddress(std::string input)
+    {
+        struct sockaddr_in sa;
+        return inet_pton(AF_INET, input.c_str(), &(sa.sin_addr)) != 0;
     }
 
 private:

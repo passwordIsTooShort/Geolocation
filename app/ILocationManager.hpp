@@ -12,7 +12,7 @@
 class ILocationManager
 {
 public:
-    using NewLocationCallback = std::function<void(IpAddress ip, GeolocationData geolocation)>;
+    using NewLocationCallback = std::function<void(IpLocationData ipLocationData)>;
 
     enum class LocationStatus
     {
@@ -27,21 +27,21 @@ public:
 
     virtual ~ILocationManager() = default;
 
-    virtual void addLocationOfIp(IpAddress ipAddress) = 0;
+    virtual void addLocation(IpAddress ipAddress) = 0;
 
-    virtual void addLocationOfUrl(std::string url) = 0;
+    virtual void addLocation(Url url) = 0;
 
-    virtual void updateLocationOfIp(IpAddress ipAddress) = 0;
+    virtual void updateLocation(IpAddress ipAddress) = 0;
 
-    virtual void updateLocationOfUrl(std::string url) = 0;
+    virtual void updateLocation(Url url) = 0;
 
-    virtual LocationStatus getIpLocationStatus(IpAddress ipAddress) = 0;
+    virtual LocationStatus getLocationStatus(IpAddress ipAddress) = 0;
 
-    virtual LocationStatus getUrlLocationStatus(std::string url) = 0;
+    virtual LocationStatus getLocationStatus(Url url) = 0;
 
-    virtual std::optional<IpLocationData> getLocationOfIp(IpAddress ipAddress) = 0;
+    virtual std::vector<IpLocationData> getLocations(IpAddress ipAddress) = 0;
 
-    virtual std::optional<IpLocationData> getLocationOfUrl(std::string url) = 0;
+    virtual std::vector<IpLocationData> getLocations(Url url) = 0;
 
     virtual void setOnNewLocationCallback(NewLocationCallback&& newLocationCallback)
     {

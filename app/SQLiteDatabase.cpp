@@ -1,6 +1,5 @@
 #include "SQLiteDatabase.hpp"
 
-#include <memory>
 #include <QtSql/QSqlDatabase>
 #include <QtCore/QStringBuilder>
 #include <QtCore/QLocale>
@@ -31,7 +30,7 @@ bool SQLiteDatabase::prepareToUse()
 
 bool SQLiteDatabase::add(IpLocationData ipLocationData)
 {
-    QString addLocationQuery = "INSERT INTO " %
+    QString addLocationQuery = "INSERT OR REPLACE INTO " %
                                QString::fromStdString(mDatabaseConfig.getTableName()) %
                                " (latitude," %
                                " longitude," %
@@ -91,7 +90,7 @@ bool SQLiteDatabase::remove(GeolocationData locationData)
     return executeQuery(removeLocationQuery);
 }
 
-std::optional<IpLocationData> SQLiteDatabase::getLocation(IpAddress address) const
+std::vector<IpLocationData> SQLiteDatabase::getLocations(IpAddress address) const
 {
     QString selectIpQuery = "SELECT latitude, longitude, ip, url FROM " %
                             QString::fromStdString(mDatabaseConfig.getTableName()) %
@@ -100,21 +99,16 @@ std::optional<IpLocationData> SQLiteDatabase::getLocation(IpAddress address) con
                             QString::fromStdString(address.toString()) %
                             "');";
     const auto results = getTableEntries(selectIpQuery);
-    if (results.empty())
-    {
-        return std::nullopt;
-    }
     if (results.size() > 1)
     {
         qWarning() << "There are more than 1 locations stored for ip: "
                    << QString::fromStdString(address.toString())
-                   << ". Number of retrieved locations: " << results.size()
-                   << ". Returning last location from query.";
+                   << ". Number of retrieved locations: " << results.size();
     }
-    return std::optional<IpLocationData>(results.back());
+    return results;
 }
 
-std::vector<IpLocationData> SQLiteDatabase::getLocation(Url url) const
+std::vector<IpLocationData> SQLiteDatabase::getLocations(Url url) const
 {
     QString selectIpQuery = "SELECT latitude, longitude, ip, url FROM " %
                             QString::fromStdString(mDatabaseConfig.getTableName()) %

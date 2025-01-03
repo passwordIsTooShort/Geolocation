@@ -30,9 +30,9 @@ MainWindow::MainWindow(std::unique_ptr<ILocationManager> locationManager)
 
     setCentralWidget(mainWidget);
 
-    mLocationManager->setOnNewLocationCallback([this](auto ipAddress, auto geolocationData)
+    mLocationManager->setOnNewLocationCallback([this](auto ipLocationData)
     {
-        handleNewLocation(IpLocationData{geolocationData, ipAddress, Url("")});
+        handleNewLocation(ipLocationData);
     });
 }
 
@@ -110,9 +110,33 @@ void MainWindow::handleAddLocationButton()
     const auto urlOrIpToAdd = mGetLocationLineEdit->text();
     if (urlOrIpToAdd.isEmpty())
     {
-        errorStrings.push_back("Provide first url or ip address that you want to find location");
+        errorStrings.emplace_back("Provide first url or ip address that you want to find location");
     }
-    // TODO: Handle other errors
+
+    LocationAddConfig locationAddConfig;
+    locationAddConfig.forceUpdate = mGetLocationWithForceCheckBox->isChecked();
+    locationAddConfig.searchOnlyDb = mGetLocationOnlyDbCheckBox->isChecked();
+    if (locationAddConfig.forceUpdate && locationAddConfig.searchOnlyDb)
+    {
+        errorStrings.emplace_back(QString("Search DB option and force update are mutually") +
+                                          " exclusive. Check only one, or uncheck both");
+    }
+
+    if (errorStrings.empty())
+    {
+        if (IpAddress::isIpAddress(urlOrIpToAdd.toStdString()))
+        {
+            handleGetLocation(IpAddress(urlOrIpToAdd.toStdString()), locationAddConfig);
+        }
+        else if (Url::isUrl(urlOrIpToAdd.toStdString()))
+        {
+            handleGetLocation(Url(urlOrIpToAdd.toStdString()), locationAddConfig);
+        }
+        else
+        {
+            errorStrings.emplace_back("Provided string seems to be neither url or ip");
+        }
+    }
 
     if (!errorStrings.empty())
     {
@@ -121,22 +145,19 @@ void MainWindow::handleAddLocationButton()
         msgbox->setText("Error list:\n" + errorStrings.join('\n'));
         msgbox->open();
     }
-    else
-    {
-        const auto ipAddres = IpAddress(urlOrIpToAdd.toStdString());
-        const auto result = mLocationManager->getLocationOfIp(ipAddres);
-        if (!result)
-        {
-            mLocationManager->addLocationOfIp(ipAddres);
-        }
-        else
-        {
-            handleNewLocation(result.value());
-        }
-    }
+}
 
-    qInfo() << "Force update: " << mGetLocationWithForceCheckBox->isChecked();
-    qInfo() << "Only DB: " << mGetLocationOnlyDbCheckBox->isChecked();
+void MainWindow::printNewLocationError(QString firstLineError, QString secondLineError)
+{
+    shiftResults();
+    auto locationIter = mLocationResults.begin();
+
+    // Filling frist line:
+    (*locationIter)->setText(firstLineError);
+
+    // Filling second line:
+    ++locationIter;
+    (*locationIter)->setText(secondLineError);
 }
 
 void MainWindow::handleNewLocation(IpLocationData ipLocationData)

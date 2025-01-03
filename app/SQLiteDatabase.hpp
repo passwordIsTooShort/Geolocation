@@ -27,9 +27,9 @@ public:
 
     virtual bool remove(GeolocationData locationData) override;
 
-    virtual std::optional<IpLocationData> getLocation(IpAddress address) const override;
+    virtual std::vector<IpLocationData> getLocations(IpAddress address) const override;
 
-    virtual std::vector<IpLocationData> getLocation(Url url) const override;
+    virtual std::vector<IpLocationData> getLocations(Url url) const override;
 
 private:
     /** @brief: Precision of IP stack is "often within a few meters

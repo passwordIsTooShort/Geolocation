@@ -1,7 +1,6 @@
 #ifndef APP_IDATABASE_HPP_
 #define APP_IDATABASE_HPP_
 
-#include <optional>
 #include <vector>
 
 #include "IpAddress.hpp"
@@ -26,8 +25,8 @@ public:
 
     virtual bool remove(GeolocationData locationData) = 0;
 
-    virtual std::optional<IpLocationData> getLocation(IpAddress address) const = 0;
+    virtual std::vector<IpLocationData> getLocations(IpAddress address) const = 0;
 
-    virtual std::vector<IpLocationData> getLocation(Url url) const = 0;
+    virtual std::vector<IpLocationData> getLocations(Url url) const = 0;
 };
 #endif // APP_IDATABASE_HPP_
