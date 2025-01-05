@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include "IIpFromUrlProvider.hpp"
+#include "intf/IIpFromUrlProvider.hpp"
 #include "IpAddress.hpp"
 
 class IpFromUrlProvider : public IIpFromUrlProvider

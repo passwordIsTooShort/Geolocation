@@ -4,7 +4,7 @@
 #include <optional>
 #include <QtNetwork/QNetworkAccessManager>
 
-#include "ILocationProvider.hpp"
+#include "intf/ILocationProvider.hpp"
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
 
@@ -24,7 +24,7 @@ private:
 
     // TODO: Provide it in constructor to allow mocking (and create factory for OnlineLocationProvider)
     QNetworkAccessManager mNetworkAccessManager;
-    
+
     const QString mHostName;
     const QString mAccessKey;
 

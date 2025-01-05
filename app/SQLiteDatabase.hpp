@@ -1,7 +1,7 @@
 #ifndef APP_SQLITEDATABASE_HPP_
 #define APP_SQLITEDATABASE_HPP_
 
-#include "IDatabase.hpp"
+#include "intf/IDatabase.hpp"
 #include "DatabaseConfig.hpp"
 #include <QtCore/QString>
 #include <QtSql/QSqlQuery>

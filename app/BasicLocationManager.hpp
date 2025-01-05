@@ -10,13 +10,13 @@
 
 #include <QtCore/QObject>
 
-#include "ILocationManager.hpp"
+#include "intf/ILocationManager.hpp"
+#include "intf/IDatabase.hpp"
+#include "intf/IIpFromUrlProvider.hpp"
+#include "intf/ILocationProvider.hpp"
 #include "IpLocationData.hpp"
 #include "IpAddress.hpp"
 #include "Url.hpp"
-#include "IDatabase.hpp"
-#include "ILocationProvider.hpp"
-#include "IIpFromUrlProvider.hpp"
 
 class BasicLocationManager : public QObject, public ILocationManager
 {
