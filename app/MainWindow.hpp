@@ -4,8 +4,8 @@
 #include <QtWidgets/QMainWindow>
 #include <QtCore/QStringBuilder>
 
-#include "ILocationManager.hpp"
 #include "IpLocationData.hpp"
+#include "AppConfigurationData.hpp"
 
 class ILocationManager;
 class QPushButton;
@@ -15,15 +15,31 @@ class QGridLayout;
 class QLabel;
 class QCheckBox;
 
+struct LocationAddConfig
+{
+    bool forceUpdate;
+    bool searchOnlyDb;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(std::unique_ptr<ILocationManager> locationManager);
+    MainWindow();
     virtual ~MainWindow() = default;
 
+    void showWarning(QString warning);
+
+signals:
+    void requestToGetLocation(QString ipOrUrl, LocationAddConfig config);
+    void saveConfiguration(AppConfigurationData appConfig);
+
 private slots:
-    void handleAddLocationButton();
+    void handleGetLocationButton();
+    void handleSaveConfigurationButton();
+
+public slots:
+    void onNewLocation(IpLocationData ipLocationData);
 
 private:
     static constexpr int GRID_WIDTH = 3;
@@ -31,18 +47,24 @@ private:
     static constexpr int LINES_PER_SINGLE_RESULT = 2;
     static constexpr int RESULT_LABELS_NUMBER = RESULTS_TO_DISPLAY * LINES_PER_SINGLE_RESULT;
 
-    struct LocationAddConfig
-    {
-        bool forceUpdate;
-        bool searchOnlyDb;
-    };
+    static constexpr char const* FILE_CONFIGURATION_NAME = "Configuration";
+    static constexpr char const* FILE_LOAD_FROM_FILE_NAME = "Load from file";
+    static constexpr char const* FILE_EXIT_NAME = "Exit";
+    static constexpr char const* DIAG_VERIFY_DB_NAME = "Verify connection to DB";
+    static constexpr char const* DIAG_GET_FAIL_LIST_NAME = "Get failed requests list";
+    static constexpr char const* DIAG_REQ_FROM_STARTUP_LIST_NAME = "Get list of requests from startup";
 
-    std::unique_ptr<ILocationManager> mLocationManager;
-
+    // Main window labels
     QLineEdit* mGetLocationLineEdit;
     QPushButton* mGetLocationPushButton;
     QCheckBox* mGetLocationWithForceCheckBox;
     QCheckBox* mGetLocationOnlyDbCheckBox;
+
+    // Configuration labels
+    QLineEdit* mApiKeyLineEdit;
+    QLineEdit* mDatabaseLocationLineEdit;
+    QLineEdit* mTableNameLineEdit;
+    QPushButton* mSaveConfigurationPushButton;
 
     std::array<QLabel*, RESULT_LABELS_NUMBER> mLocationResults;
 
@@ -51,41 +73,9 @@ private:
     int addConfigurationToGridLayout(QGridLayout* layout, int level);
     int addStatusToGridLayout(QGridLayout* layout, int level);
 
-    void printNewLocationError(QString firstLineError, QString secondLineError);
-    void handleNewLocation(IpLocationData ipLocationData);
+    void handleMenu(QAction* action);
+    void openConfigurationMenu();
+
     void shiftResults();
-
-    template <typename T>
-    void handleGetLocation(T ipOrUrl, LocationAddConfig config)
-    {
-        if (config.forceUpdate)
-        {
-            mLocationManager->updateLocation(ipOrUrl);
-            return;
-        }
-
-        const auto resultsList = mLocationManager->getLocations(ipOrUrl);
-        if (resultsList.empty())
-        {
-            if (config.searchOnlyDb)
-            {
-                QString firstLineError = "Failed to get location for: " %
-                                      QString::fromStdString(ipOrUrl.toString());
-                QString secondLineError = "Location not available in DB, and \"only DB\" is checked in configuration";
-                printNewLocationError(firstLineError, secondLineError);
-            }
-            else
-            {
-                mLocationManager->addLocation(ipOrUrl);
-            }
-        }
-        else
-        {
-            for (auto&& singleLocatin : resultsList)
-            {
-                handleNewLocation(singleLocatin);
-            }
-        }
-    }
 };
 #endif // APP_MAINWINDOW_HPP_

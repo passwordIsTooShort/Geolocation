@@ -6,6 +6,9 @@
 #include <map>
 #include <set>
 #include <variant>
+#include <iostream>
+
+#include <QtCore/QObject>
 
 #include "ILocationManager.hpp"
 #include "IpLocationData.hpp"
@@ -15,8 +18,9 @@
 #include "ILocationProvider.hpp"
 #include "IIpFromUrlProvider.hpp"
 
-class BasicLocationManager : public ILocationManager
+class BasicLocationManager : public QObject, public ILocationManager
 {
+    Q_OBJECT
 public:
     BasicLocationManager(std::unique_ptr<IDatabase> database,
                          std::unique_ptr<ILocationProvider> locationProvider,
@@ -24,21 +28,16 @@ public:
 
     virtual ~BasicLocationManager() = default;
 
-    virtual void addLocation(IpAddress ipAddress) override;
+    virtual void addLocation(std::string ipOrUrl) override;
 
-    virtual void addLocation(Url url) override;
+    virtual void updateLocation(std::string ipOrUrl) override;
 
-    virtual void updateLocation(IpAddress ipAddress) override;
+    virtual LocationStatus getLocationStatus(std::string ipOrUrl) override;
 
-    virtual void updateLocation(Url url) override;
+    virtual std::vector<IpLocationData> getLocations(std::string ipOrUrl) override;
 
-    virtual LocationStatus getLocationStatus(IpAddress ipAddress) override;
-
-    virtual LocationStatus getLocationStatus(Url url) override;
-
-    virtual std::vector<IpLocationData> getLocations(IpAddress ipAddress) override;
-
-    virtual std::vector<IpLocationData> getLocations(Url url) override;
+signals:
+    void newLocation(IpLocationData ipLocation);
 
 private:
     std::unique_ptr<IDatabase> mDatabase;
@@ -49,6 +48,22 @@ private:
 
     std::set<std::variant<IpAddress, Url>> mProcessingElements;
     std::set<std::variant<IpAddress, Url>> mFailedElements;
+
+    void addLocation(IpAddress ipAddress);
+
+    void addLocation(Url url);
+
+    void updateLocation(IpAddress ipAddress);
+
+    void updateLocation(Url url);
+
+    LocationStatus getLocationStatus(IpAddress ipAddress);
+
+    LocationStatus getLocationStatus(Url url);
+
+    std::vector<IpLocationData> getLocations(IpAddress ipAddress);
+
+    std::vector<IpLocationData> getLocations(Url url);
 
     template<typename T>
     void insideAddLocation(T addressOrUrl)

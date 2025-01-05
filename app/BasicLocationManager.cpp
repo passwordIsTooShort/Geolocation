@@ -14,6 +14,73 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
     std::cout << "Table creation result: " << mDatabase->prepareToUse() << '\n';
 }
 
+
+void BasicLocationManager::addLocation(std::string ipOrUrl)
+{
+    if (IpAddress::isIpAddress(ipOrUrl))
+    {
+        addLocation(IpAddress(ipOrUrl));
+    }
+    else if (Url::isUrl(ipOrUrl))
+    {
+        addLocation(Url(ipOrUrl));
+    }
+    else
+    {
+        std::cout << "Provided string is neither ip nor url\n";
+    }
+}
+
+void BasicLocationManager::updateLocation(std::string ipOrUrl)
+{
+    if (IpAddress::isIpAddress(ipOrUrl))
+    {
+        updateLocation(IpAddress(ipOrUrl));
+    }
+    else if (Url::isUrl(ipOrUrl))
+    {
+        updateLocation(Url(ipOrUrl));
+    }
+    else
+    {
+        std::cout << "Provided string is neither ip nor url\n";
+    }
+}
+
+ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(std::string ipOrUrl)
+{
+    if (IpAddress::isIpAddress(ipOrUrl))
+    {
+        return getLocationStatus(IpAddress(ipOrUrl));
+    }
+    else if (Url::isUrl(ipOrUrl))
+    {
+        return getLocationStatus(Url(ipOrUrl));
+    }
+    else
+    {
+        std::cout << "Provided string is neither ip nor url\n";
+    }
+    return LocationStatus::WRONG_STATUS;
+}
+
+std::vector<IpLocationData> BasicLocationManager::getLocations(std::string ipOrUrl)
+{
+    if (IpAddress::isIpAddress(ipOrUrl))
+    {
+        return getLocations(IpAddress(ipOrUrl));
+    }
+    else if (Url::isUrl(ipOrUrl))
+    {
+        return getLocations(Url(ipOrUrl));
+    }
+    else
+    {
+        std::cout << "Provided string is neither ip nor url\n";
+    }
+    return std::vector<IpLocationData>{};
+}
+
 void BasicLocationManager::addLocation(IpAddress ipAddress)
 {
     insideAddLocation(ipAddress);
@@ -26,7 +93,6 @@ void BasicLocationManager::addLocation(Url url)
 
 void BasicLocationManager::updateLocation(IpAddress ipAddress)
 {
-    // TODO: Verify if correct IP address
     startProcessing(ipAddress);
     auto successCallback = [this, ipAddress](auto geolocationData)
     {
@@ -46,7 +112,6 @@ void BasicLocationManager::updateLocation(IpAddress ipAddress)
 
 void BasicLocationManager::updateLocation(Url url)
 {
-    // TODO: Verfy url
     startProcessing(url);
     auto successCallback = [this, url](auto ipAddresses)
     {
@@ -145,20 +210,20 @@ bool BasicLocationManager::isMarkedAsFailed(std::variant<IpAddress, Url> ipOrUrl
 void BasicLocationManager::handleNewLocation(IpAddress ipAddress,
                                              GeolocationData geolocationData)
 {
-    IpLocationData newLocation = {geolocationData, ipAddress};
+    IpLocationData receivedNewLocation = {geolocationData, ipAddress};
 
     auto urlIter = mIpToUrlMap.find(ipAddress);
     if (urlIter != mIpToUrlMap.end())
     {
-        newLocation.url = urlIter->second;
+        receivedNewLocation.url = urlIter->second;
         mIpToUrlMap.erase(urlIter);
     }
-    mDatabase->add(newLocation);
-    mNewLocationCallback(newLocation);
+    mDatabase->add(receivedNewLocation);
+    emit newLocation(receivedNewLocation);
 
     finishedSuccesfully(ipAddress);
-    if (!newLocation.url.isEmpty())
+    if (!receivedNewLocation.url.isEmpty())
     {
-        finishedSuccesfully(newLocation.url);
+        finishedSuccesfully(receivedNewLocation.url);
     }
 }
