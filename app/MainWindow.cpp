@@ -15,88 +15,118 @@
 MainWindow::MainWindow()
 {
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    createMenuBar();
 
-    auto menuBar = createMenuBar();
-    setMenuBar(menuBar);
+    mMsgbox = new QMessageBox();
 
-    auto mainWidget = new QWidget();
-    auto outLayout = new QGridLayout(mainWidget);
+    mMainWidget = new QWidget();
+    mMainGridLayout = new QGridLayout(mMainWidget);
 
     int level = 0;
-    level = addLocationAddToGridLayout(outLayout, level);
-    level = addConfigurationToGridLayout(outLayout, level);
-    level = addStatusToGridLayout(outLayout, level);
+    level = addLocationAddToGridLayout(level);
+    level = addConfigurationToGridLayout(level);
+    level = addStatusToGridLayout(level);
 
-    setCentralWidget(mainWidget);
+    setCentralWidget(mMainWidget);
 }
 
-QMenuBar* MainWindow::createMenuBar()
+MainWindow::~MainWindow()
 {
-    auto fileMenu = new QMenu("File");
-    fileMenu->addAction(FILE_CONFIGURATION_NAME);
-    fileMenu->addAction(FILE_LOAD_FROM_FILE_NAME);
-    fileMenu->addAction(FILE_EXIT_NAME);
+    delete mFileMenu;
+    delete mDiagnosticsMenu;
+    delete mMainGridLayout;
 
-    auto diagnosticsMenu = new QMenu("Diagnostics");
-    diagnosticsMenu->addAction(DIAG_VERIFY_DB_NAME);
-    diagnosticsMenu->addAction(DIAG_GET_FAIL_LIST_NAME);
-    diagnosticsMenu->addAction(DIAG_REQ_FROM_STARTUP_LIST_NAME);
+    delete mMainWidget;
+    delete mLineSeparator;
+    delete mGetLocationLabel;
+    delete mGetLocationLineEdit;
+    delete mGetLocationPushButton;
+    delete mRemoveLocationPushButton;
+    delete mGetLocationWithForceCheckBox;
+    delete mGetLocationOnlyDbCheckBox;
+    delete mApiLabel;
+    delete mDatabaseLocationLabel;
+    delete mTableNameLabel;
 
-    auto menuBar = new QMenuBar();
-    menuBar->addMenu(fileMenu);
-    menuBar->addSeparator();
-    menuBar->addMenu(diagnosticsMenu);
+    delete mConfigurationWindow;
+    delete mConfigurationWindowLayout;
+    delete mApiKeyLineEdit;
+    delete mDatabaseLocationLineEdit;
+    delete mTableNameLineEdit;
+    delete mSaveConfigurationPushButton;
 
-    connect(fileMenu, &QMenu::triggered, this, &MainWindow::handleMenu);
-    connect(diagnosticsMenu, &QMenu::triggered, this, &MainWindow::handleMenu);
-
-    return menuBar;
+    delete mMsgbox;
+    for (auto& elem : mLocationResults)
+    {
+        delete elem;
+    }
 }
 
-int MainWindow::addLocationAddToGridLayout(QGridLayout* gridLayout, int level)
+void MainWindow::createMenuBar()
 {
-    auto findLabel = new QLabel("IP address or url: ");
+    mFileMenu = menuBar()->addMenu(tr("&File"));
+    mFileMenu->addAction(FILE_CONFIGURATION_NAME);
+    mFileMenu->addAction(FILE_LOAD_FROM_FILE_NAME);
+    mFileMenu->addAction(FILE_EXIT_NAME);
+
+    menuBar()->addSeparator();
+
+    mDiagnosticsMenu = menuBar()->addMenu(tr("&Diagnostics"));
+    mDiagnosticsMenu->addAction(DIAG_VERIFY_DB_NAME);
+    mDiagnosticsMenu->addAction(DIAG_GET_FAIL_LIST_NAME);
+    mDiagnosticsMenu->addAction(DIAG_REQ_FROM_STARTUP_LIST_NAME);
+
+    connect(mFileMenu, &QMenu::triggered, this, &MainWindow::handleMenu);
+    connect(mDiagnosticsMenu, &QMenu::triggered, this, &MainWindow::handleMenu);
+}
+
+int MainWindow::addLocationAddToGridLayout(int level)
+{
+    mGetLocationLabel = new QLabel("IP address or url: ");
     mGetLocationLineEdit = new QLineEdit("");
     mGetLocationLineEdit->setMinimumWidth(300);
     mGetLocationPushButton = new QPushButton("Get location");
+    mRemoveLocationPushButton = new QPushButton("Remove location");
 
-    gridLayout->addWidget(findLabel, level, 0);
-    gridLayout->addWidget(mGetLocationLineEdit, level, 1);
-    gridLayout->addWidget(mGetLocationPushButton, level, 2);
+    mMainGridLayout->addWidget(mGetLocationLabel, level, 0, 2, 1);
+    mMainGridLayout->addWidget(mGetLocationLineEdit, level, 1, 2, 1);
+    mMainGridLayout->addWidget(mGetLocationPushButton, level, 2, 1, 1);
+    mMainGridLayout->addWidget(mRemoveLocationPushButton, ++level, 2, 1, 1);
 
     connect(mGetLocationPushButton, &QPushButton::released, this, &MainWindow::handleGetLocationButton);
+    connect(mRemoveLocationPushButton, &QPushButton::released, this, &MainWindow::handleRemoveLocationButton);
 
     return ++level;
 }
 
-int MainWindow::addConfigurationToGridLayout(QGridLayout* gridLayout, int level)
+int MainWindow::addConfigurationToGridLayout(int level)
 {
     mGetLocationWithForceCheckBox = new QCheckBox("Force update");
     mGetLocationWithForceCheckBox->setChecked(false);
     mGetLocationOnlyDbCheckBox = new QCheckBox("Search only in DB");
     mGetLocationOnlyDbCheckBox->setChecked(false);
 
-    gridLayout->addWidget(mGetLocationWithForceCheckBox, level, 0, 1, GRID_WIDTH);
+    mMainGridLayout->addWidget(mGetLocationWithForceCheckBox, level, 0, 1, GRID_WIDTH);
     ++level;
-    gridLayout->addWidget(mGetLocationOnlyDbCheckBox, level, 0, 1, GRID_WIDTH);
+    mMainGridLayout->addWidget(mGetLocationOnlyDbCheckBox, level, 0, 1, GRID_WIDTH);
 
     return ++level;
 }
 
-int MainWindow::addStatusToGridLayout(QGridLayout* gridLayout, int level)
+int MainWindow::addStatusToGridLayout(int level)
 {
-    auto lineSeparator = new QFrame();
-    lineSeparator->setFrameShape(QFrame::HLine);
-    lineSeparator->setFrameShadow(QFrame::Sunken);
+    mLineSeparator = new QFrame();
+    mLineSeparator->setFrameShape(QFrame::HLine);
+    mLineSeparator->setFrameShadow(QFrame::Sunken);
 
-    gridLayout->addWidget(lineSeparator, level, 0, 1, GRID_WIDTH);
+    mMainGridLayout->addWidget(mLineSeparator, level, 0, 1, GRID_WIDTH);
     ++level;
 
     for (auto& locationPlaceholder : mLocationResults)
     {
         locationPlaceholder = new QLabel("");
         locationPlaceholder->setTextInteractionFlags(Qt::TextSelectableByMouse);
-        gridLayout->addWidget(locationPlaceholder, level++, 0, 1, GRID_WIDTH);
+        mMainGridLayout->addWidget(locationPlaceholder, level++, 0, 1, GRID_WIDTH);
     }
 
     return level;
@@ -122,11 +152,30 @@ void MainWindow::handleGetLocationButton()
 
     if (!errorStrings.empty())
     {
-        showWarning("Error list:\n" + errorStrings.join('\n'));
+        showDialog("Error list:\n" + errorStrings.join('\n'));
     }
     else
     {
         emit requestToGetLocation(urlOrIpToAdd, locationAddConfig);
+    }
+}
+
+void MainWindow::handleRemoveLocationButton()
+{
+    QStringList errorStrings;
+    const auto urlOrIpToAdd = mGetLocationLineEdit->text();
+    if (urlOrIpToAdd.isEmpty())
+    {
+        errorStrings.emplace_back("Provide first url or ip address that you want to remove from DB");
+    }
+
+    if (!errorStrings.empty())
+    {
+        showDialog("Error list:\n" + errorStrings.join('\n'));
+    }
+    else
+    {
+        emit requestToRemoveLocation(urlOrIpToAdd);
     }
 }
 
@@ -173,7 +222,7 @@ void MainWindow::handleMenu(QAction* action)
     }
     else
     {
-        showWarning("Functionality not implemented yet");
+        showDialog("Functionality not implemented yet");
     }
 }
 
@@ -190,46 +239,57 @@ void MainWindow::shiftResults()
 
 void MainWindow::openConfigurationMenu()
 {
-    auto configurationWindow = new QWidget();
-    auto configurationWindowLayout = new QGridLayout(configurationWindow);
+    mConfigurationWindow = new QWidget();
+    mConfigurationWindowLayout = new QGridLayout(mConfigurationWindow);
 
-    auto apiLabel = new QLabel("API key: ");
+    mApiLabel = new QLabel("API key: ");
     mApiKeyLineEdit = new QLineEdit("");
     mApiKeyLineEdit->setMinimumWidth(300);
 
     int level = 0;
-    configurationWindowLayout->addWidget(apiLabel, level, 0);
-    configurationWindowLayout->addWidget(mApiKeyLineEdit, level, 1);
+    mConfigurationWindowLayout->addWidget(mApiLabel, level, 0);
+    mConfigurationWindowLayout->addWidget(mApiKeyLineEdit, level, 1);
 
     ++level;
-    auto databaseLocationLabel = new QLabel("Database path: ");
+    mDatabaseLocationLabel = new QLabel("Database path: ");
     mDatabaseLocationLineEdit = new QLineEdit("");
     mDatabaseLocationLineEdit->setMinimumWidth(300);
 
-    configurationWindowLayout->addWidget(databaseLocationLabel, level, 0);
-    configurationWindowLayout->addWidget(mDatabaseLocationLineEdit, level, 1);
+    mConfigurationWindowLayout->addWidget(mDatabaseLocationLabel, level, 0);
+    mConfigurationWindowLayout->addWidget(mDatabaseLocationLineEdit, level, 1);
 
     ++level;
-    auto tableNameLabel = new QLabel("Table name: ");
+    mTableNameLabel = new QLabel("Table name: ");
     mTableNameLineEdit = new QLineEdit("");
     mTableNameLineEdit->setMinimumWidth(300);
 
-    configurationWindowLayout->addWidget(tableNameLabel, level, 0);
-    configurationWindowLayout->addWidget(mTableNameLineEdit, level, 1);
+    mConfigurationWindowLayout->addWidget(mTableNameLabel, level, 0);
+    mConfigurationWindowLayout->addWidget(mTableNameLineEdit, level, 1);
 
     ++level;
     mSaveConfigurationPushButton = new QPushButton("Save config");
-    configurationWindowLayout->addWidget(mSaveConfigurationPushButton, level, 0);
+    mConfigurationWindowLayout->addWidget(mSaveConfigurationPushButton, level, 0);
 
-    configurationWindow->show();
+    mConfigurationWindow->show();
 
     connect(mSaveConfigurationPushButton, &QPushButton::released, this, &MainWindow::handleSaveConfigurationButton);
 }
 
-void MainWindow::showWarning(QString warning)
+void MainWindow::showDialog(QString text, DialogLevel dialogLevel)
 {
-    QMessageBox* msgbox = new QMessageBox();
-    msgbox->setWindowTitle("Warning");
-    msgbox->setText(warning);
-    msgbox->open();
+    mMsgbox->close();
+
+    QString windowTitle = "Unknown";
+    if (dialogLevel == DialogLevel::WARNING)
+    {
+        windowTitle = "Warning";
+    }
+    else if (dialogLevel == DialogLevel::INFO)
+    {
+        windowTitle = "Info";
+    }
+
+    mMsgbox->setWindowTitle(windowTitle);
+    mMsgbox->setText(text);
+    mMsgbox->open();
 }

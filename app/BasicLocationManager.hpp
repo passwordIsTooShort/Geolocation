@@ -32,6 +32,8 @@ public:
 
     virtual void updateLocation(std::string ipOrUrl) override;
 
+    virtual bool removeLocation(std::string ipOrUrl) override;
+
     virtual LocationStatus getLocationStatus(std::string ipOrUrl) override;
 
     virtual std::vector<IpLocationData> getLocations(std::string ipOrUrl) override;
@@ -56,6 +58,10 @@ private:
     void updateLocation(IpAddress ipAddress);
 
     void updateLocation(Url url);
+
+    bool removeLocation(IpAddress ipAddress);
+
+    bool removeLocation(Url url);
 
     LocationStatus getLocationStatus(IpAddress ipAddress);
 

@@ -14,6 +14,8 @@ class QLineEdit;
 class QGridLayout;
 class QLabel;
 class QCheckBox;
+class QFrame;
+class QMessageBox;
 
 struct LocationAddConfig
 {
@@ -26,16 +28,24 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     MainWindow();
-    virtual ~MainWindow() = default;
+    virtual ~MainWindow();
 
-    void showWarning(QString warning);
+    enum class DialogLevel
+    {
+        WARNING,
+        INFO
+    };
+
+    void showDialog(QString text, DialogLevel dialogLevel = DialogLevel::WARNING);
 
 signals:
     void requestToGetLocation(QString ipOrUrl, LocationAddConfig config);
+    void requestToRemoveLocation(QString ipOrUrl);
     void saveConfiguration(AppConfigurationData appConfig);
 
 private slots:
     void handleGetLocationButton();
+    void handleRemoveLocationButton();
     void handleSaveConfigurationButton();
 
 public slots:
@@ -54,24 +64,39 @@ private:
     static constexpr char const* DIAG_GET_FAIL_LIST_NAME = "Get failed requests list";
     static constexpr char const* DIAG_REQ_FROM_STARTUP_LIST_NAME = "Get list of requests from startup";
 
+    QMenu * mFileMenu;
+    QMenu * mDiagnosticsMenu;
+    QGridLayout* mMainGridLayout;
+
     // Main window labels
+    QWidget* mMainWidget;
+    QFrame* mLineSeparator;
+    QLabel* mGetLocationLabel;
     QLineEdit* mGetLocationLineEdit;
     QPushButton* mGetLocationPushButton;
+    QPushButton* mRemoveLocationPushButton;
     QCheckBox* mGetLocationWithForceCheckBox;
     QCheckBox* mGetLocationOnlyDbCheckBox;
+    QLabel* mApiLabel;
+    QLabel* mDatabaseLocationLabel;
+    QLabel* mTableNameLabel;
 
     // Configuration labels
+    QWidget* mConfigurationWindow;
+    QGridLayout* mConfigurationWindowLayout;
     QLineEdit* mApiKeyLineEdit;
     QLineEdit* mDatabaseLocationLineEdit;
     QLineEdit* mTableNameLineEdit;
     QPushButton* mSaveConfigurationPushButton;
 
+    // Message box
+    QMessageBox* mMsgbox;
     std::array<QLabel*, RESULT_LABELS_NUMBER> mLocationResults;
 
-    QMenuBar* createMenuBar();
-    int addLocationAddToGridLayout(QGridLayout* layout, int level);
-    int addConfigurationToGridLayout(QGridLayout* layout, int level);
-    int addStatusToGridLayout(QGridLayout* layout, int level);
+    void createMenuBar();
+    int addLocationAddToGridLayout(int level);
+    int addConfigurationToGridLayout(int level);
+    int addStatusToGridLayout(int level);
 
     void handleMenu(QAction* action);
     void openConfigurationMenu();

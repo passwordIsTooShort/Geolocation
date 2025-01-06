@@ -1,6 +1,3 @@
-#include <iostream>
-#include <variant>
-
 #include "BasicLocationManager.hpp"
 
 BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
@@ -10,8 +7,17 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
 , mLocationProvider{std::move(locationProvider)}
 , mIpFromUrlProvider{std::move(ipFromUrlProvider)}
 {
-    std::cout << "Connect to database result: " << mDatabase->connectToDatabase() << '\n';
-    std::cout << "Table creation result: " << mDatabase->prepareToUse() << '\n';
+    if (!mDatabase->connectToDatabase())
+    {
+        std::cerr << "Failed to connect to DB. Aborting the program" << std::endl;
+        std::abort();
+    }
+
+    if (!mDatabase->prepareToUse())
+    {
+        std::cerr << "Failed to prepare DB to use. Aborting the program" << std::endl;
+        std::abort();
+    }
 }
 
 
@@ -47,8 +53,27 @@ void BasicLocationManager::updateLocation(std::string ipOrUrl)
     }
 }
 
+bool BasicLocationManager::removeLocation(std::string ipOrUrl)
+{
+    std::cout << "Removing" << std::endl;
+    if (IpAddress::isIpAddress(ipOrUrl))
+    {
+        return removeLocation(IpAddress(ipOrUrl));
+    }
+    else if (Url::isUrl(ipOrUrl))
+    {
+        return removeLocation(Url(ipOrUrl));
+    }
+    else
+    {
+        std::cout << "Provided string is neither ip nor url\n";
+    }
+    return false;
+}
+
 ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(std::string ipOrUrl)
 {
+    std::cout << "Getting status" << std::endl;
     if (IpAddress::isIpAddress(ipOrUrl))
     {
         return getLocationStatus(IpAddress(ipOrUrl));
@@ -129,6 +154,16 @@ void BasicLocationManager::updateLocation(Url url)
     };
 
     mIpFromUrlProvider->getIpForUrl(url, successCallback, failureCallback);
+}
+
+bool BasicLocationManager::removeLocation(IpAddress ipAddress)
+{
+    return mDatabase->remove(ipAddress);
+}
+
+bool BasicLocationManager::removeLocation(Url url)
+{
+    return mDatabase->remove(url);
 }
 
 ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(IpAddress ipAddress)

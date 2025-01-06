@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <QtWidgets/QApplication>
@@ -36,6 +35,31 @@ int main(int argc, char **argv)
                          &mainWindow, &MainWindow::onNewLocation);
     });
 
+    QObject::connect(&mainWindow, &MainWindow::requestToRemoveLocation,
+    [&locationManager, &mainWindow](QString ipOrUrl)
+    {
+        if (!locationManager)
+        {
+            mainWindow.showDialog("Cannot remove location: " + ipOrUrl + ". Provide first app configuration (file->Configuration)");
+        }
+        else if (ILocationManager::LocationStatus::READY_TO_READ != locationManager->getLocationStatus(ipOrUrl.toStdString()))
+        {
+            mainWindow.showDialog("Location: " + ipOrUrl + " do not exist in database. Cannot remove it");
+        }
+        else if (!locationManager->removeLocation(ipOrUrl.toStdString()))
+        {
+            mainWindow.showDialog("Failed to remove location: " + ipOrUrl);
+        }
+        else if (ILocationManager::LocationStatus::NOT_EXIST != locationManager->getLocationStatus(ipOrUrl.toStdString()))
+        {
+            mainWindow.showDialog("Location: " + ipOrUrl + " removed, but still exists in DB. Internal error");
+        }
+        else
+        {
+            mainWindow.showDialog("Location: " + ipOrUrl + " succesfully removed", MainWindow::DialogLevel::INFO);
+        }
+    });
+
     QObject::connect(&mainWindow, &MainWindow::requestToGetLocation,
     [&locationManager, &mainWindow](QString ipOrUrl, LocationAddConfig config)
     {
@@ -55,7 +79,7 @@ int main(int argc, char **argv)
                     QString error = "Failed to get location for: " %
                                      QString::fromStdString(ipOrUrl.toStdString()) %
                                      ". Location not available in DB, and \"only DB\" is checked in configuration";
-                    mainWindow.showWarning(error);
+                    mainWindow.showDialog(error);
                 }
                 else
                 {
@@ -72,7 +96,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            mainWindow.showWarning("Configuration for application was not provided - fill up first configuration (file->Configuration)");
+            mainWindow.showDialog("Configuration for application was not provided - fill up first configuration (file->Configuration)");
         }
     });
 

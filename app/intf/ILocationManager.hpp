@@ -30,6 +30,8 @@ public:
 
     virtual void updateLocation(std::string ipOrUrl) = 0;
 
+    virtual bool removeLocation(std::string ipOrUrl) = 0;
+
     virtual LocationStatus getLocationStatus(std::string ipOrUrl) = 0;
 
     virtual std::vector<IpLocationData> getLocations(std::string ipOrUrl) = 0;
