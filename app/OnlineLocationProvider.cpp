@@ -10,8 +10,11 @@
 #include <QtCore/QStringBuilder>
 #include <QtCore/QRegularExpression>
 
-OnlineLocationProvider::OnlineLocationProvider(std::string hostName, std::string accessKey)
-: mHostName{QString::fromStdString(hostName)}
+OnlineLocationProvider::OnlineLocationProvider(std::unique_ptr<INetworkAccessManager> networkAccessManager,
+                                               std::string hostName,
+                                               std::string accessKey)
+: mNetworkAccessManager{std::move(networkAccessManager)}
+, mHostName{QString::fromStdString(hostName)}
 , mAccessKey{QString::fromStdString(accessKey)}
 {
 }
@@ -27,7 +30,7 @@ void OnlineLocationProvider::getByIp(IpAddress address,
                              % "?access_key="
                              % mAccessKey;
 
-    auto reply = mNetworkAccessManager.get(QNetworkRequest(fullResuestUrl));
+    auto reply = mNetworkAccessManager->get(QNetworkRequest(fullResuestUrl));
     QObject::connect(reply, &QNetworkReply::finished, [this, successCallback, failureCallback, reply]()
     {
         std::string failureInfo;

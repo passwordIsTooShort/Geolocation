@@ -6,10 +6,6 @@
 
 bool SQLiteDatabase::connectToDatabase()
 {
-    // TODO: In case of multiple database types - introduce json config file
-    // that contains database type, database name, and optionally user name
-    // and hostname (password need to be provided to the app).
-    // Database can be created by factory based on config file
     QSqlDatabase database = QSqlDatabase::addDatabase(QString::fromStdString(mDatabaseConfig.getQtDatabaseType()));
     database.setDatabaseName(QString::fromStdString(mDatabaseConfig.getPath()));
 

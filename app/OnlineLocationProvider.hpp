@@ -5,13 +5,16 @@
 #include <QtNetwork/QNetworkAccessManager>
 
 #include "intf/ILocationProvider.hpp"
+#include "intf/INetworkAccessManager.hpp"
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
 
 class OnlineLocationProvider : public ILocationProvider
 {
 public:
-    OnlineLocationProvider(std::string hostName, std::string accessKey);
+    OnlineLocationProvider(std::unique_ptr<INetworkAccessManager> networkAccessManager,
+                           std::string hostName,
+                           std::string accessKey);
 
     virtual ~OnlineLocationProvider() override = default;
 
@@ -22,8 +25,7 @@ public:
 private:
     inline constexpr static int OK_STATUS_CODE = 200;
 
-    // TODO: Provide it in constructor to allow mocking (and create factory for OnlineLocationProvider)
-    QNetworkAccessManager mNetworkAccessManager;
+    std::unique_ptr<INetworkAccessManager> mNetworkAccessManager;
 
     const QString mHostName;
     const QString mAccessKey;

@@ -1,3 +1,5 @@
+#include "Application.hpp"
+
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -14,7 +16,7 @@
 std::optional<AppConfigurationData> parseConfigFromConsoleArgList(int argc, char **argv);
 void recreateLocationManager(std::unique_ptr<ILocationManager>& locationManager, AppConfigurationData configuration);
 
-int main(int argc, char **argv)
+int run(int argc, char **argv)
 {
     QApplication application(argc, argv);
 
