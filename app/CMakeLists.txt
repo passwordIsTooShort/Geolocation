@@ -15,6 +15,9 @@ set(SOURCE_FILES
     IpFromUrlProvider.cpp
     BasicLocationManager.cpp
     MainWindow.cpp
+    Application.cpp
+    NetworkReply.cpp
+    NetworkAccessHandler.cpp
 )
 
 add_library(${LIBRARY_NAME} ${SOURCE_FILES})

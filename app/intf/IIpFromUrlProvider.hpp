@@ -1,5 +1,5 @@
-#ifndef APP_IIPFROMURLPROVIDER_HPP_
-#define APP_IIPFROMURLPROVIDER_HPP_
+#ifndef APP_INTF_IIPFROMURLPROVIDER_HPP_
+#define APP_INTF_IIPFROMURLPROVIDER_HPP_
 
 #include <functional>
 #include <vector>
@@ -20,4 +20,4 @@ public:
 
     virtual void getIpForUrl(Url url, SuccessCallback successCallback, FailureCallback failureCallback) = 0;
 };
-#endif // APP_IIPFROMURLPROVIDER_HPP_
+#endif // APP_INTF_IIPFROMURLPROVIDER_HPP_

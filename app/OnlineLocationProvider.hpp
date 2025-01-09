@@ -2,17 +2,17 @@
 #define APP_ONLINELOCATIONPROVIDER_HPP_
 
 #include <optional>
-#include <QtNetwork/QNetworkAccessManager>
+#include <string>
 
 #include "intf/ILocationProvider.hpp"
-#include "intf/INetworkAccessManager.hpp"
+#include "intf/INetworkAccessHandler.hpp"
 #include "GeolocationData.hpp"
 #include "IpAddress.hpp"
 
 class OnlineLocationProvider : public ILocationProvider
 {
 public:
-    OnlineLocationProvider(std::unique_ptr<INetworkAccessManager> networkAccessManager,
+    OnlineLocationProvider(std::unique_ptr<INetworkAccessHandler> networkAccessHandler,
                            std::string hostName,
                            std::string accessKey);
 
@@ -23,14 +23,15 @@ public:
                          FailureCallback&& failureCallback) override;
 
 private:
-    inline constexpr static int OK_STATUS_CODE = 200;
+    inline static const std::string LATITUDE = "latitude";
+    inline static const std::string LONGITUDE = "longitude";
 
-    std::unique_ptr<INetworkAccessManager> mNetworkAccessManager;
+    const std::string mHostName;
+    const std::string mAccessKey;
 
-    const QString mHostName;
-    const QString mAccessKey;
+    std::unique_ptr<INetworkAccessHandler> mNetworkAccessHandler;
 
-    std::optional<GeolocationData> parseGeolocationFromReply(QNetworkReply* reply, std::string& failureInfo);
-    bool checkNetworkReply(QNetworkReply* reply, std::string& failureInfo);
+    std::optional<GeolocationData> parseGeolocation(NetworkReply networkReply, std::string& failureInfo);
+    bool checkNetworkReply(NetworkReply networkReply, std::string& failureInfo);
 };
 #endif // APP_ONLINELOCATIONPROVIDER_HPP_

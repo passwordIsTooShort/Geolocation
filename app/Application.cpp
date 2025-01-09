@@ -5,8 +5,8 @@
 #include <optional>
 #include <QtWidgets/QApplication>
 
-#include "intf/INetworkAccessManager.hpp"
-#include "NetworkAccessManager.hpp"
+#include "intf/INetworkAccessHandler.hpp"
+#include "NetworkAccessHandler.hpp"
 #include "SQLiteDatabase.hpp"
 #include "OnlineLocationProvider.hpp"
 #include "IpFromUrlProvider.hpp"
@@ -125,7 +125,7 @@ std::optional<AppConfigurationData> parseConfigFromConsoleArgList(int argc, char
 void recreateLocationManager(std::unique_ptr<ILocationManager>& locationManager, AppConfigurationData configuration)
 {
     const std::string hostName = "http://api.ipstack.com";
-    std::unique_ptr<INetworkAccessManager> networkAccessManager = std::make_unique<NetworkAccessManager>();
+    std::unique_ptr<INetworkAccessHandler> networkAccessManager = std::make_unique<NetworkAccessHandler>();
     std::unique_ptr<ILocationProvider> locationProvider =
         std::make_unique<OnlineLocationProvider>(std::move(networkAccessManager), hostName, configuration.apiKey);
     std::unique_ptr<IIpFromUrlProvider> ipFromUrlProvider = std::make_unique<IpFromUrlProvider>();

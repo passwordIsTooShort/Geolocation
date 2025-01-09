@@ -1,5 +1,5 @@
-#ifndef APP_ILOCATIONPROVIDER_HPP_
-#define APP_ILOCATIONPROVIDER_HPP_
+#ifndef APP_INTF_ILOCATIONPROVIDER_HPP_
+#define APP_INTF_ILOCATIONPROVIDER_HPP_
 
 #include <functional>
 
@@ -15,9 +15,9 @@ public:
     ILocationProvider() = default;
 
     virtual ~ILocationProvider() = default;
-    
+
     virtual void getByIp(IpAddress address,
                          SuccessCallback&& successCallback,
                          FailureCallback&& failureCallback) = 0;
 };
-#endif // APP_ILOCATIONPROVIDER_HPP_
+#endif // APP_INTF_ILOCATIONPROVIDER_HPP_

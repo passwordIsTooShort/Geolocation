@@ -1,21 +1,15 @@
 
 #include "OnlineLocationProvider.hpp"
 
-#include <iostream>
-#include <sstream>
-#include <QtNetwork/QNetworkReply>
-#include <QtNetwork/QNetworkRequest>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
-#include <QtCore/QStringBuilder>
-#include <QtCore/QRegularExpression>
 
-OnlineLocationProvider::OnlineLocationProvider(std::unique_ptr<INetworkAccessManager> networkAccessManager,
+OnlineLocationProvider::OnlineLocationProvider(std::unique_ptr<INetworkAccessHandler> networkAccessHandler,
                                                std::string hostName,
                                                std::string accessKey)
-: mNetworkAccessManager{std::move(networkAccessManager)}
-, mHostName{QString::fromStdString(hostName)}
-, mAccessKey{QString::fromStdString(accessKey)}
+: mHostName{hostName}
+, mAccessKey{accessKey}
+, mNetworkAccessHandler{std::move(networkAccessHandler)}
 {
 }
 
@@ -23,18 +17,16 @@ void OnlineLocationProvider::getByIp(IpAddress address,
                                      SuccessCallback&& successCallback,
                                      FailureCallback&& failureCallback)
 {
-    qDebug() << "Request for geolocation for: " << QString::fromStdString(address.toString());
-    QString fullResuestUrl = mHostName
-                             %"/"
-                             % QString::fromStdString(address.toString())
-                             % "?access_key="
-                             % mAccessKey;
+    Url fullResuestUrl = mHostName
+                         + "/"
+                         +  address.toString()
+                         +  "?access_key="
+                         +  mAccessKey;
 
-    auto reply = mNetworkAccessManager->get(QNetworkRequest(fullResuestUrl));
-    QObject::connect(reply, &QNetworkReply::finished, [this, successCallback, failureCallback, reply]()
+    mNetworkAccessHandler->get(fullResuestUrl, [this, successCallback, failureCallback](auto networkReply)
     {
         std::string failureInfo;
-        auto geolocation = parseGeolocationFromReply(reply, failureInfo);
+        auto geolocation = parseGeolocation(networkReply, failureInfo);
         if (geolocation)
         {
             successCallback(geolocation.value());
@@ -43,22 +35,21 @@ void OnlineLocationProvider::getByIp(IpAddress address,
         {
             failureCallback(failureInfo);
         }
-
-        reply->deleteLater();
     });
 }
 
-std::optional<GeolocationData> OnlineLocationProvider::parseGeolocationFromReply(QNetworkReply* reply, std::string& failureInfo)
+std::optional<GeolocationData> OnlineLocationProvider::parseGeolocation(NetworkReply networkReply, std::string& failureInfo)
 {
     failureInfo.clear();
-    if (!checkNetworkReply(reply, failureInfo))
+    if (!checkNetworkReply(networkReply, failureInfo))
     {
         return std::nullopt;
     }
 
-    QString strReply = QString(reply->readAll());
+    auto strReply = networkReply.read();
+
     QJsonParseError jsonConversionError;
-    QJsonDocument jsonResponse(QJsonDocument::fromJson(strReply.toUtf8(), &jsonConversionError));
+    QJsonDocument jsonResponse(QJsonDocument::fromJson(QString::fromStdString(strReply).toUtf8(), &jsonConversionError));
     if (jsonConversionError.error != QJsonParseError::ParseError::NoError)
     {
         failureInfo = "JSON parsing error: " + jsonConversionError.errorString().toStdString();
@@ -66,31 +57,32 @@ std::optional<GeolocationData> OnlineLocationProvider::parseGeolocationFromReply
     }
 
     QJsonObject jsonObj = jsonResponse.object();
-    return GeolocationData{jsonObj[QString("latitude")].toDouble(), jsonObj[QString("longitude")].toDouble()};
+    auto latitudeQString = QString::fromStdString(LATITUDE);
+    auto longitudeQString = QString::fromStdString(LONGITUDE);
+    if (!jsonObj.contains(latitudeQString) || !jsonObj.contains(longitudeQString))
+    {
+        failureInfo = "JSON do not contains geolocation data";
+        return std::nullopt;
+    }
+
+    return GeolocationData{jsonObj[latitudeQString].toDouble(), jsonObj[longitudeQString].toDouble()};
 }
 
-bool OnlineLocationProvider::checkNetworkReply(QNetworkReply* reply, std::string& failureInfo)
+bool OnlineLocationProvider::checkNetworkReply(NetworkReply networkReply, std::string& failureInfo)
 {
     failureInfo.clear();
-    if (reply == nullptr)
+    if (networkReply.error())
     {
-        failureInfo = "Nullptr reply";
+        failureInfo = networkReply.getErrorString();
         return false;
     }
 
-    if (reply->error())
-    {
-        failureInfo = reply->errorString().toStdString();
-        return false;
-    }
-
-    const auto statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    if (statusCode != OK_STATUS_CODE)
+    const auto statusCode = networkReply.getStatusCode();
+    if (statusCode != NetworkReply::OK_STATUS_CODE)
     {
         failureInfo = "Received NOK response. Status code: "
                       + std::to_string(statusCode)
-                      + ". Reason phrase attribute: "
-                      + reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString().toStdString();
+                      + ".";
         return false;
     }
 

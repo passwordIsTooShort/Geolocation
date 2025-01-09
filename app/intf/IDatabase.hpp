@@ -1,5 +1,5 @@
-#ifndef APP_IDATABASE_HPP_
-#define APP_IDATABASE_HPP_
+#ifndef APP_INTF_IDATABASE_HPP_
+#define APP_INTF_IDATABASE_HPP_
 
 #include <vector>
 
@@ -29,4 +29,4 @@ public:
 
     virtual std::vector<IpLocationData> getLocations(Url url) const = 0;
 };
-#endif // APP_IDATABASE_HPP_
+#endif // APP_INTF_IDATABASE_HPP_

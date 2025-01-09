@@ -1,5 +1,5 @@
-#ifndef APP_ILOCATIONMANAGER_HPP_
-#define APP_ILOCATIONMANAGER_HPP_
+#ifndef APP_INTF_ILOCATIONMANAGER_HPP_
+#define APP_INTF_ILOCATIONMANAGER_HPP_
 
 #include <optional>
 #include <string>
@@ -37,4 +37,4 @@ public:
     virtual std::vector<IpLocationData> getLocations(std::string ipOrUrl) = 0;
 };
 
-#endif // APP_ILOCATIONMANAGER_HPP_
+#endif // APP_INTF_ILOCATIONMANAGER_HPP_
