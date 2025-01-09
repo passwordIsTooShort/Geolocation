@@ -10,17 +10,26 @@ set(CMAKE_AUTOMOC ON)
 # TODO: Add public headres (after cleanup of project structure)
 
 set(SOURCE_FILES
-    OnlineLocationProvider.cpp
-    SQLiteDatabase.cpp
-    IpFromUrlProvider.cpp
-    BasicLocationManager.cpp
-    MainWindow.cpp
-    Application.cpp
-    NetworkReply.cpp
-    NetworkAccessHandler.cpp
+    src/OnlineLocationProvider.cpp
+    src/SQLiteDatabase.cpp
+    src/IpFromUrlProvider.cpp
+    src/BasicLocationManager.cpp
+    src/MainWindow.cpp
+    src/Application.cpp
+    network/NetworkReply.cpp
+    network/NetworkAccessHandler.cpp
 )
 
 add_library(${LIBRARY_NAME} ${SOURCE_FILES})
+
+target_include_directories(${LIBRARY_NAME}
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/app
+        ${CMAKE_SOURCE_DIR}/app/include
+        ${CMAKE_SOURCE_DIR}/app/intf
+        ${CMAKE_SOURCE_DIR}/app/network
+        ${CMAKE_SOURCE_DIR}/app/src
+)
 
 target_compile_options(${LIBRARY_NAME}
     PUBLIC
@@ -45,5 +54,5 @@ target_link_libraries(${LIBRARY_NAME}
         Qt6::Widgets
 )
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${LIBRARY_NAME})
