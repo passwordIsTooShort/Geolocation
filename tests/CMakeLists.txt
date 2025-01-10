@@ -20,9 +20,12 @@ set(LIBRARIES_FOR_TESTS
 
 add_executable(OnlineLocationProviderTest ut/OnlineLocationProviderTest.cpp)
 add_executable(SQLiteDatabaseTest ut/SQLiteDatabaseTest.cpp)
+add_executable(BasicLocationManagerTest ut/BasicLocationManagerTest.cpp)
 
 target_link_libraries(OnlineLocationProviderTest ${LIBRARIES_FOR_TESTS})
 target_link_libraries(SQLiteDatabaseTest ${LIBRARIES_FOR_TESTS})
+target_link_libraries(BasicLocationManagerTest ${LIBRARIES_FOR_TESTS})
 
 add_test(AllTestsInOnlineLocationProvider OnlineLocationProviderTest)
 add_test(AllTestsInSQLiteDatabase SQLiteDatabaseTest)
+add_test(AllTestsInBasicLocationManager BasicLocationManagerTest)

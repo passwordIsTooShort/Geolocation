@@ -35,6 +35,13 @@ int run(int argc, char **argv)
     [&locationManager, &mainWindow](auto configuration)
     {
         recreateLocationManager(locationManager, configuration);
+
+        if (locationManager && locationManager->getStatus() != ILocationManager::ManagerStatus::READY_TO_USE)
+        {
+            mainWindow.showDialog("Wrong configuration provided (cannot connect to DB). Fix configuration and try again.");
+            return;
+        }
+
         QObject::connect(static_cast<BasicLocationManager*>(locationManager.get()), &BasicLocationManager::newLocation,
                          &mainWindow, &MainWindow::onNewLocation);
     });

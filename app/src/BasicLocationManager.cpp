@@ -9,17 +9,26 @@ BasicLocationManager::BasicLocationManager(std::unique_ptr<IDatabase> database,
 {
     if (!mDatabase->connectToDatabase())
     {
-        std::cerr << "Failed to connect to DB. Aborting the program" << std::endl;
-        std::abort();
+        std::cerr << "Failed to connect to DB" << std::endl;
+        mManagerStatus = ManagerStatus::DATABASE_ERROR;
     }
 
     if (!mDatabase->prepareToUse())
     {
-        std::cerr << "Failed to prepare DB to use. Aborting the program" << std::endl;
-        std::abort();
+        std::cerr << "Failed to prepare DB to use" << std::endl;
+        mManagerStatus = ManagerStatus::DATABASE_ERROR;
+    }
+
+    if (mManagerStatus != ManagerStatus::DATABASE_ERROR)
+    {
+        mManagerStatus = ManagerStatus::READY_TO_USE;
     }
 }
 
+ILocationManager::ManagerStatus BasicLocationManager::getStatus() const
+{
+    return mManagerStatus;
+}
 
 void BasicLocationManager::addLocation(std::string ipOrUrl)
 {
@@ -55,7 +64,6 @@ void BasicLocationManager::updateLocation(std::string ipOrUrl)
 
 bool BasicLocationManager::removeLocation(std::string ipOrUrl)
 {
-    std::cout << "Removing" << std::endl;
     if (IpAddress::isIpAddress(ipOrUrl))
     {
         return removeLocation(IpAddress(ipOrUrl));
@@ -73,7 +81,6 @@ bool BasicLocationManager::removeLocation(std::string ipOrUrl)
 
 ILocationManager::LocationStatus BasicLocationManager::getLocationStatus(std::string ipOrUrl)
 {
-    std::cout << "Getting status" << std::endl;
     if (IpAddress::isIpAddress(ipOrUrl))
     {
         return getLocationStatus(IpAddress(ipOrUrl));
@@ -129,7 +136,8 @@ void BasicLocationManager::updateLocation(IpAddress ipAddress)
         std::cout << "Failed to update location of IP: "
                     << ipAddress.toString()
                     << ". Error: "
-                    << errorString;
+                    << errorString
+                    << '\n';
     };
 
     mLocationProvider->getByIp(ipAddress, successCallback, failureCallback);

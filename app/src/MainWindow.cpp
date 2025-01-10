@@ -32,34 +32,6 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    delete mFileMenu;
-    delete mDiagnosticsMenu;
-    delete mMainGridLayout;
-
-    delete mMainWidget;
-    delete mLineSeparator;
-    delete mGetLocationLabel;
-    delete mGetLocationLineEdit;
-    delete mGetLocationPushButton;
-    delete mRemoveLocationPushButton;
-    delete mGetLocationWithForceCheckBox;
-    delete mGetLocationOnlyDbCheckBox;
-    delete mApiLabel;
-    delete mDatabaseLocationLabel;
-    delete mTableNameLabel;
-
-    delete mConfigurationWindow;
-    delete mConfigurationWindowLayout;
-    delete mApiKeyLineEdit;
-    delete mDatabaseLocationLineEdit;
-    delete mTableNameLineEdit;
-    delete mSaveConfigurationPushButton;
-
-    delete mMsgbox;
-    for (auto& elem : mLocationResults)
-    {
-        delete elem;
-    }
 }
 
 void MainWindow::createMenuBar()

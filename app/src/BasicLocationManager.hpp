@@ -28,6 +28,8 @@ public:
 
     virtual ~BasicLocationManager() = default;
 
+    virtual ManagerStatus getStatus() const override;
+
     virtual void addLocation(std::string ipOrUrl) override;
 
     virtual void updateLocation(std::string ipOrUrl) override;
@@ -45,6 +47,7 @@ private:
     std::unique_ptr<IDatabase> mDatabase;
     std::unique_ptr<ILocationProvider> mLocationProvider;
     std::unique_ptr<IIpFromUrlProvider> mIpFromUrlProvider;
+    ManagerStatus mManagerStatus = ManagerStatus::NOT_INITIALIZED;
 
     std::map<IpAddress, Url> mIpToUrlMap;
 

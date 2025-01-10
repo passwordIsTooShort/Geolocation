@@ -22,9 +22,18 @@ public:
         WRONG_STATUS
     };
 
+    enum class ManagerStatus
+    {
+        READY_TO_USE,
+        DATABASE_ERROR,
+        NOT_INITIALIZED
+    };
+
     ILocationManager() = default;
 
     virtual ~ILocationManager() = default;
+
+    virtual ManagerStatus getStatus() const = 0;
 
     virtual void addLocation(std::string ipOrUrl) = 0;
 

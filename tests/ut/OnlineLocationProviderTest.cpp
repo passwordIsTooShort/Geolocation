@@ -32,14 +32,15 @@ protected:
 
   std::string createJsonResponse(double latitude, double longitude) const;
   void runTest(TestConfig config);
-};
 
-MATCHER_P(GeolocationMatcher, expectedGeolocation, "")
-{
-  constexpr double MIN_DIFF_TO_TREAT_EQUAL = 0.00001;
-  return abs(arg.latitude - expectedGeolocation.latitude) < MIN_DIFF_TO_TREAT_EQUAL &&
-         abs(arg.longitude - expectedGeolocation.longitude) < MIN_DIFF_TO_TREAT_EQUAL;
-}
+  auto GeolocationMatcher(const GeolocationData& expected)
+  {
+    return testing::AllOf(
+           testing::Field(&GeolocationData::latitude, testing::DoubleNear(expected.latitude, 0.0001)),
+           testing::Field(&GeolocationData::longitude, testing::DoubleNear(expected.longitude, 0.0001))
+      );
+  }
+};
 
 std::string OnlineLocationProviderTest::createJsonResponse(double latitude, double longitude) const
 {
