@@ -44,6 +44,16 @@ int run(int argc, char **argv)
 
         QObject::connect(static_cast<BasicLocationManager*>(locationManager.get()), &BasicLocationManager::newLocation,
                          &mainWindow, &MainWindow::onNewLocation);
+        QObject::connect(static_cast<BasicLocationManager*>(locationManager.get()), &BasicLocationManager::urlUpdateFailure,
+                          [&mainWindow](Url url)
+                          {
+                             mainWindow.showDialog("Failed to get IP addresses for URL: " + QString::fromStdString(url.toString()));
+                          });
+        QObject::connect(static_cast<BasicLocationManager*>(locationManager.get()), &BasicLocationManager::ipUpdateFailure,
+                         [&mainWindow](IpAddress ipAddress)
+                         {
+                            mainWindow.showDialog("Failed to get location for IP: " + QString::fromStdString(ipAddress.toString()));
+                         });
     });
 
     QObject::connect(&mainWindow, &MainWindow::requestToRemoveLocation,

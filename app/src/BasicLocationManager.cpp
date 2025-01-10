@@ -133,6 +133,7 @@ void BasicLocationManager::updateLocation(IpAddress ipAddress)
     auto failureCallback = [this, ipAddress](auto errorString)
     {
         finishedWithFail(ipAddress);
+        emit ipUpdateFailure(ipAddress);
         std::cout << "Failed to update location of IP: "
                     << ipAddress.toString()
                     << ". Error: "
@@ -157,6 +158,7 @@ void BasicLocationManager::updateLocation(Url url)
     auto failureCallback = [this, url](auto failureInfo)
     {
         finishedWithFail(url);
+        emit urlUpdateFailure(url);
         std::cout << "Failed to get ip for url: " << url.toString()
                   << ". Reason: " << failureInfo << '\n';
     };

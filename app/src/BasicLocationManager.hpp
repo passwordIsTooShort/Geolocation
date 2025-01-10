@@ -42,6 +42,8 @@ public:
 
 signals:
     void newLocation(IpLocationData ipLocation);
+    void ipUpdateFailure(IpAddress ipLocation);
+    void urlUpdateFailure(Url url);
 
 private:
     std::unique_ptr<IDatabase> mDatabase;
