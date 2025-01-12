@@ -1,9 +1,9 @@
-# H1 Project purpose
+# Project purpose
 Project allows to get geolocation (latitiude and longtitiude) of any IP address or URL. If search is done through URL, then first it is converted to list of corresponding IP addresses. Then geolocation for each IP address is stored in DB.
 
 If database already contains specific IP address or URL, then geolocation for this location is returned imidiately. Otherwise, the request for geolocation is performed to online location provider (ipstack.com)
 
-# H1 Preparing environment
+# Preparing environment
 List of requirements:
  - CMake
  - SQLite database
@@ -23,10 +23,10 @@ Your API Access Key:
 ```
 Please remember, that there is limitation to 100 free requests per month.
 
-# H1 Building an application
+# Building an application
 Build system uses cmake. To build a project just run build.sh script.
 
-# H1 Running the application
+# Running the application
 After building the applicatoin you can simply start it from command line:
 ```
 ./geolocation
@@ -45,8 +45,8 @@ Latitiude, Longtitiude, Ip Address, URL
 
 Please keep in mind, that URL will be filled up only if URL will be used to search location
 
-# H1 Known limitations
+# Known limitations
 Providing full url address may not work yet. Please provide URL without protocol (http(s)) and www prefix.
 
-# H1 Contact
+# Contact
 In case of any questions please write to mati_s3@o2.pl
