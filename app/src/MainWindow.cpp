@@ -1,4 +1,8 @@
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
+
+#include <iostream>
 
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPushButton>
@@ -163,6 +167,34 @@ void MainWindow::handleSaveConfigurationButton()
     emit saveConfiguration(AppConfigurationData{databaseConfig, apiKey});
 }
 
+void MainWindow::handleLoadMultipleButton()
+{
+    const auto loadMultipleFileName = mLoadMultipleFileLineEdit->text();
+    if (loadMultipleFileName.isEmpty())
+    {
+        showDialog("Empty file name. Provide correct filename");
+        return;
+    }
+
+    std::filesystem::path inputFilePath(loadMultipleFileName.toStdString());
+    if (!std::filesystem::exists(inputFilePath))
+    {
+        showDialog("File: " + QString::fromStdString(inputFilePath.string()) + " does not exist. Provide correct filename");
+        return;
+    }
+
+    LocationAddConfig locationAddConfig;
+    locationAddConfig.forceUpdate = false;
+    locationAddConfig.searchOnlyDb = false;
+
+    std::ifstream inputFile(inputFilePath.string());
+    std::string line;
+    while (inputFile >> line)
+    {
+        emit requestToGetLocation(QString::fromStdString(line), locationAddConfig);
+    }
+}
+
 void MainWindow::onNewLocation(IpLocationData ipLocationData)
 {
     shiftResults();
@@ -191,6 +223,10 @@ void MainWindow::handleMenu(QAction* action)
     if (actionName == FILE_CONFIGURATION_NAME)
     {
         openConfigurationMenu();
+    }
+    else if (actionName == FILE_LOAD_FROM_FILE_NAME)
+    {
+        openLoadMultipleMenu();
     }
     else
     {
@@ -245,6 +281,28 @@ void MainWindow::openConfigurationMenu()
     mConfigurationWindow->show();
 
     connect(mSaveConfigurationPushButton, &QPushButton::released, this, &MainWindow::handleSaveConfigurationButton);
+}
+
+void MainWindow::openLoadMultipleMenu()
+{
+    mLoadMultipleWindow = new QWidget();
+    mLoadMultipleWindowLayout = new QGridLayout(mLoadMultipleWindow);
+
+    mLoadMultipleLabel = new QLabel("Path to input file: ");
+    mLoadMultipleFileLineEdit = new QLineEdit("");
+    mLoadMultipleFileLineEdit->setMinimumWidth(300);
+
+    int level = 0;
+    mLoadMultipleWindowLayout->addWidget(mLoadMultipleLabel, level, 0);
+    mLoadMultipleWindowLayout->addWidget(mLoadMultipleFileLineEdit, level, 1);
+
+    ++level;
+    mLoadMultiplePushButton = new QPushButton("Load");
+    mLoadMultipleWindowLayout->addWidget(mLoadMultiplePushButton, level, 0);
+
+    mLoadMultipleWindow->show();
+
+    connect(mLoadMultiplePushButton, &QPushButton::released, this, &MainWindow::handleLoadMultipleButton);
 }
 
 void MainWindow::showDialog(QString text, DialogLevel dialogLevel)

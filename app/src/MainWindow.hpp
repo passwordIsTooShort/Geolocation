@@ -47,6 +47,7 @@ private slots:
     void handleGetLocationButton();
     void handleRemoveLocationButton();
     void handleSaveConfigurationButton();
+    void handleLoadMultipleButton();
 
 public slots:
     void onNewLocation(IpLocationData ipLocationData);
@@ -77,9 +78,6 @@ private:
     QPushButton* mRemoveLocationPushButton;
     QCheckBox* mGetLocationWithForceCheckBox;
     QCheckBox* mGetLocationOnlyDbCheckBox;
-    QLabel* mApiLabel;
-    QLabel* mDatabaseLocationLabel;
-    QLabel* mTableNameLabel;
 
     // Configuration labels
     QWidget* mConfigurationWindow;
@@ -88,6 +86,16 @@ private:
     QLineEdit* mDatabaseLocationLineEdit;
     QLineEdit* mTableNameLineEdit;
     QPushButton* mSaveConfigurationPushButton;
+    QLabel* mApiLabel;
+    QLabel* mDatabaseLocationLabel;
+    QLabel* mTableNameLabel;
+
+    // Load multiple ips labels
+    QWidget* mLoadMultipleWindow;
+    QGridLayout* mLoadMultipleWindowLayout;
+    QLabel* mLoadMultipleLabel;
+    QLineEdit* mLoadMultipleFileLineEdit;
+    QPushButton* mLoadMultiplePushButton;
 
     // Message box
     QMessageBox* mMsgbox;
@@ -100,6 +108,7 @@ private:
 
     void handleMenu(QAction* action);
     void openConfigurationMenu();
+    void openLoadMultipleMenu();
 
     void shiftResults();
 };
